@@ -5,18 +5,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { todoFilterAtom } from "@/atom/todo";
 
 const SelectFilterTodos = () => {
-  const setFilter = useSetAtom(todoFilterAtom);
+  const [filter, setFilter] = useAtom(todoFilterAtom);
 
   const handleFilterChange = (value: "all" | "incomplete" | "completed") => {
     setFilter(value);
   };
 
   return (
-    <Select onValueChange={handleFilterChange}>
+    <Select value={filter} onValueChange={handleFilterChange}>
       <SelectTrigger className="w-full mt-2">
         <SelectValue placeholder="Todoフィルター" />
       </SelectTrigger>

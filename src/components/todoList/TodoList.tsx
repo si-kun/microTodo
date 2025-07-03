@@ -8,11 +8,9 @@ import { deleteTodo } from "@/actions/deleteTodo";
 import toast from "react-hot-toast";
 import { toggleTodo } from "@/actions/toggleTodo";
 import { getAllTodos } from "@/actions/getAllTodos";
-import { Todo } from "@prisma/client";
 
 const TodoList = () => {
   const [todos, setTodos] = useAtom(todosAtom);
-  const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
   const filter = useAtomValue(todoFilterAtom)
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +43,18 @@ const TodoList = () => {
     return <div>Loading...</div>;
   }
 
-  const filterTodos = (filter: "all" | "incomplete" | "completed") => {
+  const getFilteredTodos = () => {
+    switch (filter) {
+      case "incomplete":
+        return todos.filter((todo) => !todo.completed);
+      case "completed":
+        return todos.filter((todo) => todo.completed);
+      default:
+        return todos;
+    }
+  };
+
+  const filteredTodos = getFilteredTodos();
 
   const handleDelete = async (id: string) => {
     try {
@@ -81,13 +90,13 @@ const TodoList = () => {
 
   return (
     <>
-      {todos.length === 0 ? (
+      {filteredTodos.length === 0 ? (
         <div className="flex justify-center items-center mt-4">
           <p className="text-center text-gray-500">Todoがありません</p>
         </div>
       ) : (
         <ul className="flex flex-col gap-2 w-full mt-4">
-          {todos.map((todo) => (
+          {filteredTodos.map((todo) => (
             <li key={todo.id} className="flex items-center gap-2">
               <Checkbox
                 id={todo.id}
