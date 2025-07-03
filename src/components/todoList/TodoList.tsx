@@ -10,6 +10,8 @@ import { toggleTodo } from "@/actions/toggleTodo";
 import { getAllTodos } from "@/actions/getAllTodos";
 import { Input } from "../ui/input";
 import { updateTodo } from "@/actions/updateTodo";
+import { Card } from "../ui/card";
+import TodoCardButton from "./TodoCardButton";
 
 const TodoList = () => {
   const [todos, setTodos] = useAtom(todosAtom);
@@ -105,7 +107,7 @@ const TodoList = () => {
     setEditingTitle("");
   };
 
-  const handleEditUpdate = async() => {
+  const handleEditUpdate = async () => {
     try {
       if (!editingTitle.trim()) {
         toast.error("Todoを入力してください");
@@ -152,57 +154,76 @@ const TodoList = () => {
       ) : (
         <ul className="flex flex-col gap-2 w-full mt-4">
           {filteredTodos.map((todo) => (
-            <li key={todo.id} className="flex items-center gap-2">
-              <Checkbox
-                id={todo.id}
-                checked={todo.completed}
-                onCheckedChange={() => handleToggleComplete(todo.id)}
-                className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
-              />
+            <Card key={todo.id} className="p-3">
+              <li className="flex items-center gap-2">
+                {editingTodoId === todo.id ? (
+                  <div>
+                    <Checkbox
+                      id={todo.id}
+                      checked={todo.completed}
+                      onCheckedChange={() => handleToggleComplete(todo.id)}
+                      className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
+                    />
 
-              {editingTodoId === todo.id ? (
-                <div className="flex flex-col gap-1 w-full">
-                  <Input
-                    value={editingTitle}
-                    onChange={(e) => setEditingTitle(e.target.value)}
-                    autoFocus
-                  />
+                    <div className="flex flex-col gap-1 w-full">
+                      <Input
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        autoFocus
+                      />
 
-                  <div className="flex items-center gap-2 ml-auto">
-                    <Button variant={"secondary"} onClick={handleEditUpdate}>
-                      更新
-                    </Button>
-                    <Button variant={"destructive"} onClick={handleEditCancel}>
-                      キャンセル
-                    </Button>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <Button
+                          variant={"secondary"}
+                          onClick={handleEditUpdate}
+                        >
+                          更新
+                        </Button>
+                        <Button
+                          variant={"destructive"}
+                          onClick={handleEditCancel}
+                        >
+                          キャンセル
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  <Label
-                    htmlFor={todo.id}
-                    className={`flex-1 ${
-                      todo.completed ? "line-through text-muted-foreground" : ""
-                    }`}
-                  >
-                    {todo.title}
-                  </Label>
+                ) : (
+                  <div className="flex gap-2">
+                    <Checkbox
+                      id={todo.id}
+                      checked={todo.completed}
+                      onCheckedChange={() => handleToggleComplete(todo.id)}
+                      className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
+                    />
+                    <div className="flex flex-col gap-2">
+                      <Label
+                        htmlFor={todo.id}
+                        className={`flex-1 ${
+                          todo.completed
+                            ? "line-through text-muted-foreground"
+                            : ""
+                        }`}
+                      >
+                        {todo.title}
+                      </Label>
 
-                  <Button
-                    variant={"secondary"}
-                    onClick={() => handleEdit(todo)}
-                  >
-                    編集
-                  </Button>
-                  <Button
-                    variant={"destructive"}
-                    onClick={() => handleDelete(todo.id)}
-                  >
-                    削除
-                  </Button>
-                </>
-              )}
-            </li>
+                      <div>
+                        <TodoCardButton
+                          buttonName="編集"
+                          onClick={() => handleEdit(todo)}
+                        />
+                        <TodoCardButton
+                          buttonName="削除"
+                          variant="destructive"
+                          onClick={() => handleDelete(todo.id)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </li>
+            </Card>
           ))}
         </ul>
       )}

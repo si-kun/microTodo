@@ -1,28 +1,24 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Todo } from "@prisma/client";
+import { CreateTodoSchema } from "@/schema/todoSchema";
 
-type AddTodoProps = Pick<Todo, "title" | "completed">
+// type AddTodoProps = Omit<Todo, "createdAt" | "updatedAt" | "id">;
 
-export const addTodo = async (data: AddTodoProps) => {
+export const addTodo = async (data: CreateTodoSchema) => {
   try {
     const result = await prisma.todo.create({
       data: {
         title: data.title,
         completed: data.completed,
+        hasDeadline: data.hasDeadline,
+        startDate: data.startDate,
+        dueDate: data.dueDate,
       },
     });
 
-    if(!result) {
-        return {
-            error: "Failed to add todo",
-            message: "Todoを追加できませんでした"
-        }
-    }
-
     return {
-        success: "Todoを追加できました",
+        success: true,
         message: "Todoを追加できました",
         data: result
     }
@@ -30,8 +26,9 @@ export const addTodo = async (data: AddTodoProps) => {
   } catch (error) {
     console.error(error);
     return {
-      error: "Failed to add todo",
-      message: "Todoを追加できませんでした"
+      success: false,
+      message: "Todoを追加できませんでした",
+      data: null
     }
   }
 };
