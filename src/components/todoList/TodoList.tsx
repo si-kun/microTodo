@@ -8,11 +8,18 @@ import { deleteTodo } from "@/actions/deleteTodo";
 import toast from "react-hot-toast";
 import { toggleTodo } from "@/actions/toggleTodo";
 import { getAllTodos } from "@/actions/getAllTodos";
+import { Input } from "../ui/input";
+import { updateTodo } from "@/actions/updateTodo";
 
 const TodoList = () => {
   const [todos, setTodos] = useAtom(todosAtom);
-  const filter = useAtomValue(todoFilterAtom)
+  const filter = useAtomValue(todoFilterAtom);
   const [isLoading, setIsLoading] = useState(false);
+
+  // edit useState
+  // const [isEditing, setIsEditing] = useState(false);
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>("");
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -88,6 +95,54 @@ const TodoList = () => {
     }
   };
 
+  const handleEdit = (todo: { id: string; title: string }) => {
+    setEditingTodoId(todo.id);
+    setEditingTitle(todo.title);
+  };
+
+  const handleEditCancel = () => {
+    setEditingTodoId(null);
+    setEditingTitle("");
+  };
+
+  const handleEditUpdate = async() => {
+    try {
+      if (!editingTitle.trim()) {
+        toast.error("Todoを入力してください");
+        return;
+      }
+
+      if (!editingTodoId) return;
+
+      const originalTodo = todos.find((todo) => todo.id === editingTodoId);
+      if (originalTodo?.title === editingTitle.trim()) {
+        setEditingTodoId(null);
+        return;
+      }
+
+      const result = await updateTodo(editingTodoId, editingTitle.trim());
+      if (!result.success || !result.data) {
+        toast.error(result.message);
+        return;
+      }
+
+      setTodos((prev) =>
+        prev.map((todo) =>
+          todo.id === editingTodoId
+            ? { ...todo, title: editingTitle.trim() }
+            : todo
+        )
+      );
+
+      setEditingTodoId(null);
+      setEditingTitle("");
+      toast.success("Todoを更新しました");
+    } catch (error) {
+      console.error(error);
+      toast.error("Todoの更新に失敗しました");
+    }
+  };
+
   return (
     <>
       {filteredTodos.length === 0 ? (
@@ -104,20 +159,49 @@ const TodoList = () => {
                 onCheckedChange={() => handleToggleComplete(todo.id)}
                 className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
               />
-              <Label
-                htmlFor={todo.id}
-                className={`flex-1 ${
-                  todo.completed ? "line-through text-muted-foreground" : ""
-                }`}
-              >
-                {todo.title}
-              </Label>
-              <Button
-                variant={"destructive"}
-                onClick={() => handleDelete(todo.id)}
-              >
-                削除
-              </Button>
+
+              {editingTodoId === todo.id ? (
+                <div className="flex flex-col gap-1 w-full">
+                  <Input
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    autoFocus
+                  />
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button variant={"secondary"} onClick={handleEditUpdate}>
+                      更新
+                    </Button>
+                    <Button variant={"destructive"} onClick={handleEditCancel}>
+                      キャンセル
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Label
+                    htmlFor={todo.id}
+                    className={`flex-1 ${
+                      todo.completed ? "line-through text-muted-foreground" : ""
+                    }`}
+                  >
+                    {todo.title}
+                  </Label>
+
+                  <Button
+                    variant={"secondary"}
+                    onClick={() => handleEdit(todo)}
+                  >
+                    編集
+                  </Button>
+                  <Button
+                    variant={"destructive"}
+                    onClick={() => handleDelete(todo.id)}
+                  >
+                    削除
+                  </Button>
+                </>
+              )}
             </li>
           ))}
         </ul>
