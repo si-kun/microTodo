@@ -10,6 +10,7 @@ import { addTodo } from "@/actions/addTodo";
 import toast from "react-hot-toast";
 import { useSetAtom } from "jotai";
 import { todosAtom } from "@/atom/todo";
+import SelectFilterTodos from "@/components/todoList/SelectFilterTodos";
 export default function Home() {
   const { register,handleSubmit,reset } = useForm<TodoSchema>({
     resolver: zodResolver(todoSchema),
@@ -18,6 +19,7 @@ export default function Home() {
       completed: false,
     },
   });
+
 
   const setTodos = useSetAtom(todosAtom)
 
@@ -47,6 +49,7 @@ export default function Home() {
         <Input {...register("title")} />
         <Button className="bg-blue-500 hover:bg-blue-600">追加</Button>
       </form>
+      <SelectFilterTodos />
       <TodoList />
     </div>
   );
