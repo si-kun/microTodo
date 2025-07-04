@@ -21,12 +21,15 @@ import { useSetAtom } from "jotai";
 import { todosAtom } from "@/atom/todo";
 import { addTodo } from "@/actions/addTodo";
 import toast from "react-hot-toast";
+import { Todo } from "@prisma/client";
+import { updateTodo } from "@/actions/updateTodo";
 
 interface TodoDialogProps {
   mode: "create" | "edit"
+  todo? : Todo
 }
 
-const TodoDialog = ({mode}:TodoDialogProps) => {
+const TodoDialog = ({mode,todo}:TodoDialogProps) => {
   const { register, handleSubmit, reset, control, watch, setValue } =
     useForm<CreateTodoSchema>({
       resolver: zodResolver(createTodoSchema),
@@ -40,8 +43,24 @@ const TodoDialog = ({mode}:TodoDialogProps) => {
     });
 
     useEffect(() => {
-      
-    })
+      if(mode === "edit" && todo) {
+        reset({
+          title: todo.title,
+          completed: todo.completed,
+          hasDeadline: todo.hasDeadline,
+          startDate: todo.startDate ? new Date(todo.startDate) : undefined,
+          dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
+        })
+      } else if (mode === "create") {
+        reset({
+          title: "",
+          completed: false,
+          hasDeadline: false,
+          startDate: undefined,
+          dueDate: undefined,
+        })
+      }
+    },[mode, todo, reset]);
 
   const hasDeadline = watch("hasDeadline");
 
@@ -51,10 +70,20 @@ const TodoDialog = ({mode}:TodoDialogProps) => {
   const [open, setOpen] = useState(false);
 
   // Todoの追加処理
-  const handleAddTodo = async(data: CreateTodoSchema) => {
+  const handleSubmitTodo = async(data: CreateTodoSchema) => {
 
     try {
-      const result = await addTodo(data);
+
+      let result;
+
+      if(mode === "create") {
+        result = await addTodo(data);
+      } else if(mode === "edit" && todo) {
+        result = await updateTodo(todo.id, data);
+      } else {
+        return;
+      }
+
 
       if(!result.success) {
         toast.error(result.message);
@@ -63,7 +92,14 @@ const TodoDialog = ({mode}:TodoDialogProps) => {
 
       if(result.success && result.data) {
         toast.success(result.message);
-        setTodos((prev) => [...prev, result.data])
+
+        if (mode === "create") {
+          setTodos((prev) => [...prev, result.data])
+        } else {
+          setTodos((prev) => (
+            prev.map((t) => t.id === result.data.id ? result.data : t)
+          ))
+        }
         reset();
         setOpen(false);
       }
@@ -73,21 +109,28 @@ const TodoDialog = ({mode}:TodoDialogProps) => {
     }
   };
 
+  const dialogTitle = mode === "create" ? "Todoを作成する" : "編集"
+
+  const dialogDescription = mode === "create"
+  ? "新しいTodoを作成します。必要な情報を入力してください。"
+  : "Todoの内容を編集します。変更後、保存ボタンをクリックしてください。";
+
+  const submitButtonText = mode === "create" ? "Todo Create" : "Todo Update";
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Todoを作成する</Button>
+        <Button variant="outline">{dialogTitle}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form
-          onSubmit={handleSubmit(handleAddTodo)}
+          onSubmit={handleSubmit(handleSubmitTodo)}
           className="flex flex-col gap-4"
         >
           <DialogHeader>
-            <DialogTitle>新しいTodoを作成</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you&apos;re
-              done.
+              {dialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
@@ -144,7 +187,7 @@ const TodoDialog = ({mode}:TodoDialogProps) => {
               <Button variant={"destructive"}>Cancel</Button>
             </DialogClose>
             <Button type="submit" className="bg-blue-500">
-              Todo Create
+              {submitButtonText}
             </Button>
           </DialogFooter>
         </form>

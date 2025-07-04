@@ -1,12 +1,19 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { CreateTodoSchema } from "@/schema/todoSchema";
 
-export const updateTodo = async (id: string, title: string) => {
+export const updateTodo = async (todoId: string,data: CreateTodoSchema) => {
   try {
     const result = await prisma.todo.update({
-      where: { id },
-      data: { title },
+      where: { id:todoId },
+      data: {
+        title: data.title,
+        completed: data.completed,
+        hasDeadline: data.hasDeadline,
+        startDate: data.startDate,
+        dueDate: data.dueDate,
+      },
     });
 
     return {
