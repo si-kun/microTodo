@@ -5,3 +5,5 @@ export const todosAtom = atom<Todo[]>([])
 
 export const filteredTodosAtom = atom<Todo[]>([])
 export const todoFilterAtom = atom<"all" | "incomplete" | "completed">("all")
+
+export const searchTodoTerm = atom<string>("")

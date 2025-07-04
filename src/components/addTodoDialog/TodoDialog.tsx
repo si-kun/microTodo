@@ -23,44 +23,54 @@ import { addTodo } from "@/actions/addTodo";
 import toast from "react-hot-toast";
 import { Todo } from "@prisma/client";
 import { updateTodo } from "@/actions/updateTodo";
+import LoadingButton from "../button/LoadingButton";
 
 interface TodoDialogProps {
-  mode: "create" | "edit"
-  todo? : Todo
+  mode: "create" | "edit";
+  todo?: Todo;
 }
 
-const TodoDialog = ({mode,todo}:TodoDialogProps) => {
-  const { register, handleSubmit, reset, control, watch, setValue } =
-    useForm<CreateTodoSchema>({
-      resolver: zodResolver(createTodoSchema),
-      defaultValues: {
+const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CreateTodoSchema>({
+    resolver: zodResolver(createTodoSchema),
+    defaultValues: {
+      title: "",
+      completed: false,
+      hasDeadline: false,
+      startDate: undefined,
+      dueDate: undefined,
+    },
+  });
+
+  useEffect(() => {
+    if (mode === "edit" && todo) {
+      reset({
+        title: todo.title,
+        completed: todo.completed,
+        hasDeadline: todo.hasDeadline,
+        startDate: todo.startDate ? new Date(todo.startDate) : undefined,
+        dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
+      });
+    } else if (mode === "create") {
+      reset({
         title: "",
         completed: false,
         hasDeadline: false,
         startDate: undefined,
         dueDate: undefined,
-      },
-    });
-
-    useEffect(() => {
-      if(mode === "edit" && todo) {
-        reset({
-          title: todo.title,
-          completed: todo.completed,
-          hasDeadline: todo.hasDeadline,
-          startDate: todo.startDate ? new Date(todo.startDate) : undefined,
-          dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
-        })
-      } else if (mode === "create") {
-        reset({
-          title: "",
-          completed: false,
-          hasDeadline: false,
-          startDate: undefined,
-          dueDate: undefined,
-        })
-      }
-    },[mode, todo, reset]);
+      });
+    }
+  }, [mode, todo, reset]);
 
   const hasDeadline = watch("hasDeadline");
 
@@ -70,50 +80,51 @@ const TodoDialog = ({mode,todo}:TodoDialogProps) => {
   const [open, setOpen] = useState(false);
 
   // Todoの追加処理
-  const handleSubmitTodo = async(data: CreateTodoSchema) => {
-
+  const handleSubmitTodo = async (data: CreateTodoSchema) => {
     try {
-
       let result;
+      setIsLoading(true);
 
-      if(mode === "create") {
+      if (mode === "create") {
         result = await addTodo(data);
-      } else if(mode === "edit" && todo) {
+      } else if (mode === "edit" && todo) {
         result = await updateTodo(todo.id, data);
       } else {
         return;
       }
 
-
-      if(!result.success) {
+      if (!result.success) {
         toast.error(result.message);
         return;
       }
 
-      if(result.success && result.data) {
+      if (result.success && result.data) {
         toast.success(result.message);
 
         if (mode === "create") {
-          setTodos((prev) => [...prev, result.data])
+          setTodos((prev) => [...prev, result.data]);
         } else {
-          setTodos((prev) => (
-            prev.map((t) => t.id === result.data.id ? result.data : t)
-          ))
+          setTodos((prev) =>
+            prev.map((t) => (t.id === result.data.id ? result.data : t))
+          );
         }
         reset();
         setOpen(false);
       }
-    } catch(error) {
+    } catch (error) {
       console.error("Error adding todo:", error);
       return;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const dialogTitle = mode === "create" ? "Todoを作成する" : "編集"
+  const dialogTitle = mode === "create" ? "Todoを作成する" : "編集";
 
-  const dialogDescription = mode === "create"
-  ? "新しいTodoを作成します。必要な情報を入力してください。"
-  : "Todoの内容を編集します。変更後、保存ボタンをクリックしてください。";
+  const dialogDescription =
+    mode === "create"
+      ? "新しいTodoを作成します。必要な情報を入力してください。"
+      : "Todoの内容を編集します。変更後、保存ボタンをクリックしてください。";
 
   const submitButtonText = mode === "create" ? "Todo Create" : "Todo Update";
 
@@ -129,13 +140,18 @@ const TodoDialog = ({mode,todo}:TodoDialogProps) => {
         >
           <DialogHeader>
             <DialogTitle>{dialogTitle}</DialogTitle>
-            <DialogDescription>
-              {dialogDescription}
-            </DialogDescription>
+            <DialogDescription>{dialogDescription}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
-            <div className="grid gap-3">
-              <Label htmlFor="todoTitle">Todo Title</Label>
+            <div className="flex flex-col gap-1">
+              <div className="flex gap-2">
+                <Label htmlFor="todoTitle">Todo Title</Label>
+                {errors.title && (
+                  <span className="text-sm text-red-400 font-bold">
+                    {errors.title.message}
+                  </span>
+                )}
+              </div>
               <Input
                 id="todoTitle"
                 placeholder="Create New Todo"
@@ -183,12 +199,20 @@ const TodoDialog = ({mode,todo}:TodoDialogProps) => {
             </div>
           </div>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant={"destructive"}>Cancel</Button>
-            </DialogClose>
-            <Button type="submit" className="bg-blue-500">
-              {submitButtonText}
-            </Button>
+            {isLoading ? (
+              <LoadingButton />
+            ) : (
+              <>
+                <DialogClose asChild>
+                  <Button variant={"destructive"} onClick={() => reset()}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button type="submit" className="bg-blue-500">
+                  {submitButtonText}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

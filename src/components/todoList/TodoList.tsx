@@ -1,19 +1,65 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { useAtom, useAtomValue } from "jotai";
-import { todoFilterAtom, todosAtom } from "@/atom/todo";
+import { searchTodoTerm, todoFilterAtom, todosAtom } from "@/atom/todo";
 import { deleteTodo } from "@/actions/deleteTodo";
 import toast from "react-hot-toast";
 import { toggleTodo } from "@/actions/toggleTodo";
 import { getAllTodos } from "@/actions/getAllTodos";
 import TodoCardButton from "./TodoCardButton";
 import TodoDialog from "../addTodoDialog/TodoDialog";
+import { Todo } from "@prisma/client";
+import Skeleton from "../Loading/Skeleton";
+import LoadingCard from "../Loading/LoadingCard";
+
+interface TodoWithLoading extends Todo {
+  isDeleting?: boolean;
+  isToggling?: boolean;
+}
 
 const TodoList = () => {
   const [todos, setTodos] = useAtom(todosAtom);
   const filter = useAtomValue(todoFilterAtom);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [displayTodos, setDisplayTodos] = useState<TodoWithLoading[]>([]);
+  const searchTerm = useAtomValue(searchTodoTerm);
+  const [isLoading, setIsLoading] = useState(true);
+
+  console.log(displayTodos);
+
+  useEffect(() => {
+    let result: TodoWithLoading[] = displayTodos.map((todo) => {
+      return {
+        ...todo,
+        isDeleting: false,
+        isToggling: false,
+      };
+    });
+
+    // 1. まずフィルターを適用
+    switch (filter) {
+      case "incomplete":
+        result = result.filter((todo) => !todo.completed);
+        break;
+      case "completed":
+        result = result.filter((todo) => todo.completed);
+        break;
+      default:
+        result = todos;
+    }
+
+    // 2 検索機能
+    if (searchTerm.trim()) {
+      result = result.filter((todo) =>
+        todo.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setDisplayTodos(result);
+  }, [todos, filter, searchTerm]);
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -41,25 +87,24 @@ const TodoList = () => {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Skeleton />;
   }
-
-  const getFilteredTodos = () => {
-    switch (filter) {
-      case "incomplete":
-        return todos.filter((todo) => !todo.completed);
-      case "completed":
-        return todos.filter((todo) => todo.completed);
-      default:
-        return todos;
-    }
-  };
-
-  const filteredTodos = getFilteredTodos();
 
   const handleDelete = async (id: string) => {
     try {
+      setDisplayTodos((prev) =>
+        prev.map((todo) =>
+          todo.id === id ? { ...todo, isDeleting: true } : todo
+        )
+      );
+
       const result = await deleteTodo(id);
+
+      if (!result.success) {
+        toast.error(result.message);
+
+        return;
+      }
 
       if (result.success) {
         setTodos((prev) => prev.filter((todo) => todo.id !== id));
@@ -67,40 +112,77 @@ const TodoList = () => {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setDisplayTodos((prev) =>
+        prev.map((todo) =>
+          todo.id === id ? { ...todo, isDeleting: false } : todo
+        )
+      );
     }
   };
 
   const handleToggleComplete = async (id: string) => {
     try {
+      setDisplayTodos((prev) =>
+        prev.map((todo) =>
+          todo.id === id ? { ...todo, isToggling: true } : todo
+        )
+      );
+
       const result = await toggleTodo(id);
 
-      if (!result.success) {
+      if (!result.success || !result.data) {
         toast.error(result.message);
         return;
       }
 
       setTodos((prev) =>
-        prev.map((todo) => (todo.id === id ? result.data! : todo))
+        prev.map((todo) => (todo.id === id ? result.data : todo))
       );
       toast.success(result.message);
     } catch (error) {
       console.error(error);
       toast.error("予期しないエラーが発生しました");
+    } finally {
+      setDisplayTodos((prev) =>
+        prev.map((todo) =>
+          todo.id === id ? { ...todo, isToggling: false } : todo
+        )
+      );
+    }
+  };
+
+  const getEmptyMessage = () => {
+    const hasSearchTerm = searchTerm.trim().length > 0;
+    const hasFilter = filter !== "all";
+
+    if (hasSearchTerm && hasFilter) {
+      return "該当するTodoがありません";
+    } else if (hasSearchTerm) {
+      return "検索に該当するTodoがありません";
+    } else if (hasFilter) {
+      return "フィルターに該当するTodoがありません";
+    } else {
+      return "Todoがありません";
     }
   };
 
   return (
     <>
-      {filteredTodos.length === 0 ? (
-        <div className="flex justify-center items-center mt-4">
-          <p className="text-center text-gray-500">Todoがありません</p>
+      {displayTodos.length === 0 ? (
+        <div className="flex justify-center items-center">
+          <p className="text-center text-gray-500">{getEmptyMessage()}</p>
         </div>
       ) : (
-        <ul className="flex flex-col gap-2 w-full mt-4">
-          {filteredTodos.map((todo) => (
+        <ul className="flex flex-col gap-2 w-full">
+          {displayTodos.map((todo) => (
             <li
               key={todo.id}
-              className={`w-full rounded-lg border-1  p-2 ${todo.completed ? "bg-blue-100 border-blue-300" : "bg-gray-50 border-gray-200"}`}
+              className={`w-full rounded-lg border-1  p-2 ${
+                todo.completed
+                  ? "bg-blue-100 border-blue-300"
+                  : "bg-gray-50 border-gray-200"
+              } relative`}
             >
               <Label htmlFor={todo.id} className="flex items-start gap-3 ">
                 <Checkbox
@@ -142,6 +224,7 @@ const TodoList = () => {
                   </div>
                 </div>
               </Label>
+              {todo.isDeleting || (todo.isToggling && <LoadingCard />)}
             </li>
           ))}
         </ul>
