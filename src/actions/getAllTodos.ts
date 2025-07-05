@@ -1,12 +1,25 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { getUser } from "./user/getUser"
 
 export const getAllTodos = async() => {
 
     try {
 
+        const userResult = await getUser();
+
+        if(!userResult.success || !userResult.user) {
+            return {
+                success: false,
+                message: userResult.message || "ユーザー情報の取得に失敗しました",
+            }
+        }
+
         const result = await prisma.todo.findMany({
+            where: {
+                userId: userResult.user.id
+            },
             orderBy: {
                 createdAt: "desc"
             }

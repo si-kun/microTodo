@@ -59,6 +59,7 @@ const TodoList = () => {
     }
 
     setDisplayTodos(result);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todos, filter, searchTerm]);
 
   useEffect(() => {

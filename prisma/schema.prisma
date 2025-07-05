@@ -18,4 +18,8 @@ model Todo {
   hasDeadline Boolean   @default(false)
   startDate   DateTime?
   dueDate     DateTime?
+
+  //リレーション
+  userId String
+  @@index([userId])
 }

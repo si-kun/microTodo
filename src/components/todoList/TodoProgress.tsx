@@ -20,7 +20,7 @@ const TodoProgress = () => {
       </div>
       <div className="flex items-center gap-2">
         <Progress value={progressValue} className="[&>*]:bg-green-500" />
-        <span className="text-sm font-medium">{progressValue}%</span>
+        <span className="text-sm font-medium">{todos.length === 0 ? 0 : progressValue}%</span>
       </div>
     </div>
   );

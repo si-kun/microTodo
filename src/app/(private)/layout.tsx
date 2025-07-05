@@ -1,9 +1,12 @@
-import React, { ReactNode } from 'react'
+import AuthGuard from "@/components/auth/AuthGuard";
+import React, { ReactNode } from "react";
 
-const PrivateLayout = ({children}:{children:ReactNode}) => {
+const PrivateLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <div className='bg-gray-100 w-screen h-screen  p-4'>{children}</div>
-  )
-}
+    <AuthGuard>
+      <div className="bg-gray-100 w-screen h-screen  p-4">{children}</div>
+    </AuthGuard>
+  );
+};
 
-export default PrivateLayout
+export default PrivateLayout;
