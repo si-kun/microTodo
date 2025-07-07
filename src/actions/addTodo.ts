@@ -4,8 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { CreateTodoSchema } from "@/schema/todoSchema";
 import { getUser } from "./user/getUser";
 
-// type AddTodoProps = Omit<Todo, "createdAt" | "updatedAt" | "id">;
-
 export const addTodo = async (data: CreateTodoSchema) => {
   try {
 
@@ -18,6 +16,22 @@ export const addTodo = async (data: CreateTodoSchema) => {
       };
     }
 
+    const category = await prisma.category.upsert({
+
+      where: {
+        userId_name: {
+          userId: userResult.user.id,
+          name: data.category
+        }
+      },
+      update: {},
+      create: {
+        name: data.category || "未分類",
+        userId: userResult.user.id,
+        color: data.categoryColor || "#f0f0f0",
+      }
+    })
+
     const result = await prisma.todo.create({
       data: {
         title: data.title,
@@ -25,6 +39,8 @@ export const addTodo = async (data: CreateTodoSchema) => {
         hasDeadline: data.hasDeadline,
         startDate: data.startDate,
         dueDate: data.dueDate,
+        categoryId: category.id,
+        isPriority: data.priority,
         userId: userResult.user.id,
       },
     });

@@ -13,6 +13,7 @@ export const updateTodo = async (todoId: string,data: CreateTodoSchema) => {
         hasDeadline: data.hasDeadline,
         startDate: data.startDate,
         dueDate: data.dueDate,
+        category: data.category,
       },
     });
 

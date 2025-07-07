@@ -27,6 +27,7 @@ const AuthGuard = ({ children }: { children: ReactNode }) => {
           toast.success(
             userResult.message || "ユーザー情報の取得に成功しました。"
           );
+          console.log(userResult)
         }
       } catch (error) {
         console.error("Error fetching user:", error);
