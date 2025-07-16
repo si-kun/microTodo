@@ -18,6 +18,10 @@ import LoadingCard from "../Loading/LoadingCard";
 interface TodoWithLoading extends Todo {
   isDeleting?: boolean;
   isToggling?: boolean;
+  category?: {
+    name: string;
+    color: string;
+  };
 }
 
 const TodoList = () => {
@@ -176,58 +180,70 @@ const TodoList = () => {
         </div>
       ) : (
         <ul className="flex flex-col gap-2 w-full">
-          {displayTodos.map((todo) => (
-            <li
-              key={todo.id}
-              className={`w-full rounded-lg border-1  p-2 ${
-                todo.completed
-                  ? "bg-blue-100 border-blue-300"
-                  : "bg-gray-50 border-gray-200"
-              } relative`}
-            >
-              <Label htmlFor={todo.id} className="flex items-start gap-3 ">
-                <Checkbox
-                  id={todo.id}
-                  checked={todo.completed}
-                  onCheckedChange={() => handleToggleComplete(todo.id)}
-                  className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
-                />
-                <div className="flex flex-col gap-3 w-full mt-[1.2px]">
-                  <p>{todo.title}</p>
+          {displayTodos.map((todo) => {
+            const today = new Date();
+            const expired = todo.hasDeadline && todo.dueDate && todo.dueDate > today ? false : true;
+            return (
+              <li
+                key={todo.id}
+                className={`w-full rounded-lg border-1  p-2 ${
+                  todo.completed
+                    ? "bg-blue-100 border-blue-300"
+                    : "bg-gray-50 border-gray-200"
+                } relative`}
+              >
+                <Label htmlFor={todo.id} className="flex items-start gap-3 ">
+                  <Checkbox
+                    id={todo.id}
+                    checked={todo.completed}
+                    onCheckedChange={() => handleToggleComplete(todo.id)}
+                    className="mt-1 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 data-[state=checked]:text-white"
+                  />
+                  <div className="flex flex-col gap-3 w-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <p>{todo.title}</p>
+                      <span
+                        style={{ backgroundColor: todo.category?.color }}
+                        className={`text-xs px-2 py-1 rounded-md`}
+                      >
+                        {todo.category?.name}
+                      </span>
+                    </div>
 
-                  <div className="flex items-center ">
-                    {todo.hasDeadline ? (
-                      <span>期限が設定されていません</span>
-                    ) : (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm text-gray-500">
-                          開始:
-                          {todo.startDate
-                            ? todo.startDate?.toLocaleDateString()
-                            : "開始は未定です"}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          期限:
-                          {todo.startDate
-                            ? todo.dueDate?.toLocaleDateString()
-                            : "期限は未定です"}
-                        </span>
+                    <div className="flex items-center ">
+                      {todo.hasDeadline ? (
+                        <span>期限が設定されていません</span>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm text-gray-500">
+                            開始:
+                            {todo.startDate
+                              ? todo.startDate?.toLocaleDateString()
+                              : "開始は未定です"}
+                          </span>
+                          <span className={`text-sm text-gray-500 ${expired ? "text-red-500 font-bold" : ""}`}>
+                            期限:
+                            {todo.startDate
+                              ? todo.dueDate?.toLocaleDateString()
+                              : "期限は未定です"}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 ml-auto">
+                        <TodoDialog mode="edit" todo={todo} />
+                        <TodoCardButton
+                          buttonName="削除"
+                          variant="destructive"
+                          onClick={() => handleDelete(todo.id)}
+                        />
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 ml-auto">
-                      <TodoDialog mode="edit" todo={todo} />
-                      <TodoCardButton
-                        buttonName="削除"
-                        variant="destructive"
-                        onClick={() => handleDelete(todo.id)}
-                      />
                     </div>
                   </div>
-                </div>
-              </Label>
-              {todo.isDeleting || (todo.isToggling && <LoadingCard />)}
-            </li>
-          ))}
+                </Label>
+                {todo.isDeleting || (todo.isToggling && <LoadingCard />)}
+              </li>
+            );
+          })}
         </ul>
       )}
     </>

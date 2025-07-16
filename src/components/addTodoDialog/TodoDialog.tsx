@@ -131,6 +131,7 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
       let result;
       setIsLoading(true);
 
+
       if (mode === "create") {
         result = await addTodo(data);
       } else if (mode === "edit" && todo) {

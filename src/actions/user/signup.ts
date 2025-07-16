@@ -7,6 +7,7 @@ interface SignupData {
   email: string;
   password: string;
   username: string;
+  avatarUrl?: string; // オプションのフィールド
 }
 
 export const signup = async (data: SignupData) => {
@@ -38,7 +39,9 @@ export const signup = async (data: SignupData) => {
         email: supabaseAuth.data.user.email!,
         createdAt: new Date(),
         updatedAt: new Date(),
-        username: data.username//一旦固定値
+        username: data.username,
+        avatarUrl: data.avatarUrl || null,
+
       },
     });
 

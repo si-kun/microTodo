@@ -23,7 +23,7 @@ const AuthGuard = ({ children }: { children: ReactNode }) => {
         }
 
         if (userResult && userResult.success && userResult.user) {
-          setUser(userResult.user.id);
+          setUser(userResult.user);
           toast.success(
             userResult.message || "ユーザー情報の取得に成功しました。"
           );

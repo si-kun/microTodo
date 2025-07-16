@@ -20,6 +20,10 @@ export const toggleTodo = async (id: string) => {
       data: {
         completed: !currentTodo.completed,
       },
+      include: {
+        category: true,
+        user: true,
+      }
     });
 
     return {

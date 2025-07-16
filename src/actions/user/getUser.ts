@@ -1,5 +1,6 @@
 "use server"
 
+import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 
 export const getUser = async () => {
@@ -26,10 +27,17 @@ export const getUser = async () => {
       }
     }
 
+    //prismaのUserを取得
+    const prismaUser = await prisma.user.findUnique({
+      where: {
+        id: data.user.id,
+      },
+    })
+
     return {
       success: true,
       message: "ユーザーの取得に成功しました",
-      user: data.user,
+      user: prismaUser,
     }
 
   } catch (error) {

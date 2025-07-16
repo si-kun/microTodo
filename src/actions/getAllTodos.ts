@@ -20,6 +20,10 @@ export const getAllTodos = async() => {
             where: {
                 userId: userResult.user.id
             },
+            include: {
+                category: true,
+                user: true,
+            },
             orderBy: {
                 createdAt: "desc"
             }
