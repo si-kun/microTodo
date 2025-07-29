@@ -1,0 +1,166 @@
+"use client";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Delete, ListPlus } from "lucide-react";
+import { UseFormSetValue } from "react-hook-form";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { Checkbox } from "../ui/checkbox";
+import { ScrollArea } from "../ui/scroll-area";
+import { CheckListItem } from "@prisma/client";
+import { Label } from "../ui/label";
+
+interface ChecklistDialogProps {
+  checkLists: {
+    title: string;
+    order: number;
+    completed: boolean;
+  }[];
+  setValue: UseFormSetValue<{
+    title: string;
+    completed: boolean;
+    hasDeadline: boolean;
+    category: string;
+    priority: "low" | "normal" | "high";
+    checkLists: {
+      title: string;
+      order: number;
+      completed: boolean;
+    }[];
+    startDate?: Date | undefined;
+    dueDate?: Date | undefined;
+    categoryColor?: string | undefined;
+  }>;
+  triggerText: string;
+}
+
+const ChecklistDialog = ({
+  checkLists,
+  setValue,
+  triggerText,
+}: ChecklistDialogProps) => {
+  const [checklistTitle, setChecklistTitle] = useState("");
+  const [checkDialogOpen, setCheckDialogOpen] = useState(false);
+
+  //チェックリストの総数
+  const totalChecklists = checkLists.length;
+
+  //完了済みのチェックリスト
+  const completedChecklists = checkLists.filter(item => item.completed).length;
+
+  const handleAddChecklist = () => {
+    if (checklistTitle.trim() === "") {
+      toast.error("タイトルが入力されていません");
+      return;
+    }
+
+    const newCheckList = {
+      title: checklistTitle.trim(),
+      order: checkLists.length + 1,
+      completed: false,
+    };
+
+    setValue("checkLists", [...checkLists, newCheckList]);
+    setChecklistTitle("");
+  };
+
+  const handleToggleChecklist = (index: number) => {
+    const updatedCheckLists = checkLists.map((item) => {
+      if (item.order === index) {
+        return {
+          ...item,
+          completed: !item.completed,
+        };
+      }
+      return item;
+    });
+    setValue("checkLists", updatedCheckLists as CheckListItem[]);
+  };
+
+  const handleDeleteChecklist = (index: number) => {
+    const updatedCheckLists = checkLists.filter((item) => item.order !== index);
+    setValue("checkLists", updatedCheckLists as CheckListItem[]);
+  };
+
+  const handleCloseDialog = () => {
+    setCheckDialogOpen(false);
+    setChecklistTitle("");
+  };
+
+  return (
+    <Dialog open={checkDialogOpen} onOpenChange={setCheckDialogOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant={"secondary"}
+          className="border-dashed shadow-none border-2 border-gray-100 bg-transparent"
+        >
+          {triggerText}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>チェックリスト項目の作成</DialogTitle>
+          <DialogDescription>
+            <span>チェックリストの数 {completedChecklists} / {totalChecklists}</span>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center gap-1">
+          <Input
+            className="text-sm"
+            placeholder="チェックリストのタイトル"
+            value={checklistTitle}
+            onChange={(e) => setChecklistTitle(e.target.value)}
+          />
+          <Button variant={"secondary"} onClick={handleAddChecklist}>
+            <ListPlus />
+          </Button>
+        </div>
+        {checkLists.length === 0 ? (
+          <span className="text-">チェックリストが登録されていません</span>
+        ) : (
+          <ScrollArea className="flex-1 min-h-0">
+            <ul className="flex flex-col gap-5">
+              {checkLists.map((item, index) => (
+                <li key={index + 1} className="flex items-center gap-2">
+                  <Checkbox
+                    checked={item.completed}
+                    id={String(item.order)}
+                    onClick={() => handleToggleChecklist(item.order)}
+                  />
+                  <Label htmlFor={String(item.order)}>{item.title}</Label>
+                  <Button
+                    onClick={() => handleDeleteChecklist(item.order)}
+                    variant={"destructive"}
+                    type="button"
+                    className="h-6 w-7 p-1 ml-auto"
+                  >
+                    <Delete />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        )}
+        <Button
+          className="mt-auto"
+          variant={"secondary"}
+          type="button"
+          onClick={handleCloseDialog}
+        >
+          Close
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ChecklistDialog;

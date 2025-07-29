@@ -19,6 +19,10 @@ model User {
 
   categories Category[]
   todos Todo[]
+
+  @@index([username])
+  @@index([email])
+  @@index([createdAt])
 }
 
 model Todo {
@@ -42,7 +46,14 @@ model Todo {
   categoryId String?
   category Category? @relation(fields: [categoryId], references: [id],onDelete: SetNull)
   tags String[]
+  checkLists CheckListItem[]
   @@index([userId])
+
+  @@index([userId, completed])
+  @@index([userId, dueDate])
+  @@index([userId, createdAt])
+  @@index([categoryId])
+  @@index([isPriority])
 }
 
 model Category {
@@ -58,4 +69,22 @@ model Category {
 
   @@index([userId])
   @@unique([userId, name])
+}
+
+model CheckListItem {
+  id String @id @default(uuid())
+  title String
+  completed Boolean @default(false)
+  order Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  todoId String
+  todo Todo @relation(fields: [todoId], references: [id], onDelete: Cascade)
+
+  @@index([todoId])
+  @@index([todoId, completed])
+  @@index([todoId, order])
 }

@@ -3,17 +3,17 @@
 import React, { useEffect, useState } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
-import { useAtom, useAtomValue } from "jotai";
-import { searchTodoTerm, todoFilterAtom, todosAtom } from "@/atom/todo";
+import {  useAtomValue } from "jotai";
+import { searchTodoTerm, todoFilterAtom } from "@/atom/todo";
 import { deleteTodo } from "@/actions/deleteTodo";
 import toast from "react-hot-toast";
 import { toggleTodo } from "@/actions/toggleTodo";
-import { getAllTodos } from "@/actions/getAllTodos";
 import TodoCardButton from "./TodoCardButton";
 import TodoDialog from "../addTodoDialog/TodoDialog";
-import { Todo } from "@prisma/client";
+import { CheckListItem, Todo } from "@prisma/client";
 import Skeleton from "../Loading/Skeleton";
 import LoadingCard from "../Loading/LoadingCard";
+import { useTodos } from "@/hooks/useTodos";
 
 interface TodoWithLoading extends Todo {
   isDeleting?: boolean;
@@ -21,21 +21,25 @@ interface TodoWithLoading extends Todo {
   category?: {
     name: string;
     color: string;
-  };
+  } | null;
+  checkLists: CheckListItem[];
 }
 
 const TodoList = () => {
-  const [todos, setTodos] = useAtom(todosAtom);
+
+  const {todos,isLoading,updateTodoInState,removeTodoFromState} = useTodos({
+    autoFetch: true,
+  })
+
   const filter = useAtomValue(todoFilterAtom);
 
   const [displayTodos, setDisplayTodos] = useState<TodoWithLoading[]>([]);
   const searchTerm = useAtomValue(searchTodoTerm);
-  const [isLoading, setIsLoading] = useState(true);
 
   console.log(displayTodos);
 
   useEffect(() => {
-    let result: TodoWithLoading[] = displayTodos.map((todo) => {
+    let result: TodoWithLoading[] = todos.map((todo) => {
       return {
         ...todo,
         isDeleting: false,
@@ -66,34 +70,7 @@ const TodoList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todos, filter, searchTerm]);
 
-  useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        setIsLoading(true);
-        const result = await getAllTodos();
 
-        if (!result.success || !result.data) {
-          toast.error(result.message);
-          return;
-        }
-
-        if (result.success && result.data) {
-          setTodos(result.data);
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("Todoの取得に失敗しました");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTodos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (isLoading) {
-    return <Skeleton />;
-  }
 
   const handleDelete = async (id: string) => {
     try {
@@ -107,14 +84,11 @@ const TodoList = () => {
 
       if (!result.success) {
         toast.error(result.message);
-
         return;
       }
 
-      if (result.success) {
-        setTodos((prev) => prev.filter((todo) => todo.id !== id));
-        toast.success(result.message);
-      }
+      removeTodoFromState(id);
+      toast.success(result.message);
     } catch (error) {
       console.error(error);
     } finally {
@@ -141,9 +115,7 @@ const TodoList = () => {
         return;
       }
 
-      setTodos((prev) =>
-        prev.map((todo) => (todo.id === id ? result.data : todo))
-      );
+      updateTodoInState(result.data);
       toast.success(result.message);
     } catch (error) {
       console.error(error);
@@ -172,6 +144,10 @@ const TodoList = () => {
     }
   };
 
+  if (isLoading) {
+    return <Skeleton />;
+  }
+
   return (
     <>
       {displayTodos.length === 0 ? (
@@ -182,7 +158,7 @@ const TodoList = () => {
         <ul className="flex flex-col gap-2 w-full">
           {displayTodos.map((todo) => {
             const today = new Date();
-            const expired = todo.hasDeadline && todo.dueDate && todo.dueDate > today ? false : true;
+            const expired = todo.hasDeadline && !todo.completed && todo.dueDate && todo.dueDate < today;
             return (
               <li
                 key={todo.id}
@@ -211,7 +187,7 @@ const TodoList = () => {
                     </div>
 
                     <div className="flex items-center ">
-                      {todo.hasDeadline ? (
+                      {!todo.hasDeadline ? (
                         <span>期限が設定されていません</span>
                       ) : (
                         <div className="flex flex-col gap-1">
@@ -221,9 +197,9 @@ const TodoList = () => {
                               ? todo.startDate?.toLocaleDateString()
                               : "開始は未定です"}
                           </span>
-                          <span className={`text-sm text-gray-500 ${expired ? "text-red-500 font-bold" : ""}`}>
+                          <span className={`text-sm  ${expired ? "text-red-500 font-bold" : "text-gray-500"}`}>
                             期限:
-                            {todo.startDate
+                            {todo.dueDate
                               ? todo.dueDate?.toLocaleDateString()
                               : "期限は未定です"}
                           </span>

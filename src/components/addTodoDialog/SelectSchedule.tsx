@@ -10,10 +10,11 @@ interface SelectScheduleProps {
   id: string;
   value? : Date | null;
   onChange? (date: Date | undefined) :void
+  disabled? : boolean;
 
 }
 
-const SelectSchedule = ({ labelName, id, value, onChange }: SelectScheduleProps) => {
+const SelectSchedule = ({ labelName, id, value, onChange, disabled }: SelectScheduleProps) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,6 +27,7 @@ const SelectSchedule = ({ labelName, id, value, onChange }: SelectScheduleProps)
           <Button
             variant="outline"
             id={id}
+            disabled={disabled}
             className="w-full justify-between font-normal"
           >
             {value ? value.toLocaleDateString("ja-JP") : "Select date"}
@@ -35,6 +37,7 @@ const SelectSchedule = ({ labelName, id, value, onChange }: SelectScheduleProps)
         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
           <Calendar
             mode="single"
+            disabled={disabled}
             selected={value ?? undefined}
             captionLayout="dropdown"
             onSelect={(date) => {

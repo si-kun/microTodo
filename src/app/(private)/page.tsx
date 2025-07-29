@@ -7,7 +7,7 @@ import SearchTodo from "@/components/todoList/SearchTodo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 export default function Home() {
   return (
-    <div className="h-full flex flex-col gap-3 px-4">
+    <div className="h-full flex flex-col gap-3 overflow-hidden">
       <div className="flex-shrink-0">
         <div className="flex items-center gap-2">
           <SearchTodo />
@@ -15,9 +15,9 @@ export default function Home() {
         <SelectFilterTodos />
         <TodoProgress />
       </div>
-      <ScrollArea className="flex-1 min-h-0">
-        <TodoList />
-      </ScrollArea>
+        <ScrollArea className="flex-1 min-h-0">
+          <TodoList />
+        </ScrollArea>
     </div>
   );
 }

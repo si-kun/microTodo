@@ -16,24 +16,27 @@ export const addTodo = async (data: CreateTodoSchema) => {
     }
 
     if (!data.startDate && !data.dueDate) {
-      data.hasDeadline = true;
+      data.hasDeadline = false;
     }
 
-    if (data.hasDeadline) {
+    if (!data.hasDeadline) {
       data.dueDate = undefined;
       data.startDate = undefined;
     }
+
+    const categoryName =
+      data.category && data.category.trim() !== "" ? data.category : "未分類";
 
     const category = await prisma.category.upsert({
       where: {
         userId_name: {
           userId: userResult.user.id,
-          name: data.category,
+          name: categoryName,
         },
       },
       update: {},
       create: {
-        name: data.category || "未分類",
+        name: categoryName,
         userId: userResult.user.id,
         color: data.categoryColor || "#f0f0f0",
       },
@@ -46,13 +49,22 @@ export const addTodo = async (data: CreateTodoSchema) => {
         hasDeadline: data.hasDeadline,
         startDate: data.startDate,
         dueDate: data.dueDate,
-        categoryId: category.id,
         isPriority: data.priority,
         userId: userResult.user.id,
+        categoryId: category.id,
+        checkLists: {
+          create: data.checkLists.map((item,index) => ({
+            title: item.title.trim(),
+            completed: item.completed,
+            order: index + 1,
+          }))
+        }
       },
+
       include: {
         category: true,
         user: true,
+        checkLists: true,
       },
     });
 

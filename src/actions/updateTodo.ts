@@ -50,6 +50,11 @@ export const updateTodo = async (todoId: string, data: CreateTodoSchema) => {
         categoryId: category.id,
         isPriority: data.priority,
       },
+      include: {
+        category: true,
+        user: true,
+        checkLists: true,
+      },
     });
 
     return {

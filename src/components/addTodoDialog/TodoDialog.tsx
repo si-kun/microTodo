@@ -16,10 +16,9 @@ import { createTodoSchema, CreateTodoSchema } from "@/schema/todoSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useSetAtom } from "jotai";
-import { todosAtom } from "@/atom/todo";
+import { todosAtom, TodoWithCategoryChecklist } from "@/atom/todo";
 import { addTodo } from "@/actions/addTodo";
 import toast from "react-hot-toast";
-import { Todo } from "@prisma/client";
 import { updateTodo } from "@/actions/updateTodo";
 import LoadingButton from "../button/LoadingButton";
 import DateCard from "./DateCard";
@@ -33,14 +32,23 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Card } from "../ui/card";
+import { useCategories } from "@/hooks/useCategories";
+import ChecklistDialog from "../checklistDialog/ChecklistDialog";
+import { CheckListItem } from "@prisma/client";
 
 interface TodoDialogProps {
-  mode: "create" | "edit";
-  todo?: Todo;
+  mode: "create" | "edit" | "view";
+  todo?: TodoWithCategoryChecklist;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
+const TodoDialog = ({ mode, todo, isOpen, onClose }: TodoDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
+
+  const { categories } = useCategories({
+    autoFetch: true,
+  });
 
   const PRIORITY_OPTIONS = [
     {
@@ -79,12 +87,13 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
     defaultValues: {
       title: "",
       completed: false,
-      hasDeadline: false,
+      hasDeadline: true,
       startDate: undefined,
       dueDate: undefined,
       category: "",
       categoryColor: "#f0f0f0",
       priority: "low",
+      checkLists: [],
     },
   });
 
@@ -96,41 +105,68 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
         hasDeadline: todo.hasDeadline,
         startDate: todo.startDate ? new Date(todo.startDate) : undefined,
         dueDate: todo.dueDate ? new Date(todo.dueDate) : undefined,
-        category: "",
-        categoryColor: "#f0f0f0",
+        category: todo.category?.name,
+        categoryColor: todo.category?.color,
         priority: "low",
+        checkLists: todo.checkLists.map((item: CheckListItem) => ({
+          title: item.title,
+          order: item.order,
+          completed: item.completed,
+        })),
       });
     } else if (mode === "create") {
       reset({
         title: "",
         completed: false,
-        hasDeadline: false,
+        hasDeadline: true,
         startDate: undefined,
         dueDate: undefined,
         category: "",
         categoryColor: "#f0f0f0",
         priority: "low",
+        checkLists: [],
       });
     }
   }, [mode, todo, reset]);
 
   const hasDeadline = watch("hasDeadline");
   const categoryValue = watch("category");
+  const checkLists = watch("checkLists");
+  const isExistingCategory = categories.some(
+    (cat) => cat.name === categoryValue
+  );
+  const hasCustomInput = categoryValue !== "" && !isExistingCategory;
 
   const setTodos = useSetAtom(todosAtom);
 
   // ダイアログの開閉
   const [open, setOpen] = useState(false);
+  const dialogOpen = isOpen !== undefined ? isOpen : open;
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isOpen !== undefined) {
+      onClose?.();
+    } else {
+      setOpen(newOpen);
+    }
+  };
+  const isReadOnly = mode === "view";
+  const dialogTriggerTitle =
+    mode === "create"
+      ? "Todoを作成する"
+      : mode === "edit"
+      ? "編集"
+      : "Todoの詳細";
+
+  const dialogTitle =
+    mode === "edit" ? `${todo?.title}の編集` : dialogTriggerTitle;
 
   // Todoの追加処理
   const handleSubmitTodo = async (data: CreateTodoSchema) => {
-
-    console.log(data)
+    console.log(data);
 
     try {
       let result;
       setIsLoading(true);
-
 
       if (mode === "create") {
         result = await addTodo(data);
@@ -166,8 +202,6 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
     }
   };
 
-  const dialogTitle = mode === "create" ? "Todoを作成する" : "編集";
-
   const dialogDescription =
     mode === "create"
       ? "新しいTodoを作成します。必要な情報を入力してください。"
@@ -177,6 +211,11 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
 
   const handleCategorySelect = (value: string) => {
     setValue("category", value);
+
+    const selectedCat = categories.find((cat) => cat.name === value);
+    if (selectedCat) {
+      setValue("categoryColor", selectedCat.color);
+    }
   };
 
   const handleInputCategoryChange = (
@@ -185,15 +224,14 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
     setValue("category", e.target.value);
   };
 
-  const existingCategories = ["未分類", "仕事", "プライベート"];
-  const isExistingCategory = existingCategories.includes(categoryValue || "");
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">{dialogTitle}</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {mode !== "view" && (
+        <DialogTrigger asChild>
+          <Button variant="outline">{dialogTriggerTitle}</Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <form
           onSubmit={handleSubmit(handleSubmitTodo)}
           className="flex flex-col gap-4"
@@ -216,13 +254,21 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
                 id="todoTitle"
                 placeholder="Create New Todo"
                 {...register("title")}
+                disabled={isReadOnly}
               />
             </div>
+
+            <ChecklistDialog
+              checkLists={checkLists}
+              setValue={setValue}
+              triggerText={mode === "edit" ? "チェックリストを編集する" : "チェックリストを追加する"}
+            />
 
             <DateCard
               hasDeadline={hasDeadline}
               control={control}
               setValue={setValue}
+              disabled={isReadOnly}
             />
 
             {/* カテゴリー選択 */}
@@ -233,13 +279,14 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
                   type="color"
                   className="w-[100px] border-none"
                   {...register("categoryColor")}
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="flex items-center gap-4">
                 <Select
-                  value={isExistingCategory ? categoryValue : undefined} // 👈 既存カテゴリの場合のみ選択状態
+                  value={isExistingCategory ? categoryValue : ""}
                   onValueChange={handleCategorySelect}
-                  disabled={!isExistingCategory && categoryValue !== ""}
+                  disabled={hasCustomInput || isReadOnly}
                 >
                   <SelectTrigger className="w-[50%]">
                     <SelectValue placeholder="Select a Category" />
@@ -247,8 +294,11 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Category</SelectLabel>
-                      <SelectItem value="未分類">未分類</SelectItem>
-                      <SelectItem value="仕事">仕事</SelectItem>{" "}
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -257,10 +307,11 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
                   placeholder="新規カテゴリー"
                   className="w-[50%]"
                   onChange={handleInputCategoryChange}
+                  disabled={isReadOnly}
                 />
               </div>
             </Card>
-            {/* カテゴリー選択 */}
+
             {/* 優先度 */}
             <div className="flex flex-col gap-1">
               <Label>優先度を選択</Label>
@@ -277,7 +328,11 @@ const TodoDialog = ({ mode, todo }: TodoDialogProps) => {
                             ? `${option.borderClass} ${option.bgClass} ${option.hoverClass}` // 選択されている場合のスタイル
                             : "border-gray-200 hover:border-gray-300"
                         }`}
-                        onClick={() => field.onChange(option.value)}
+                        onClick={
+                          isReadOnly
+                            ? undefined
+                            : () => field.onChange(option.value)
+                        }
                       >
                         <span className="font-bold">{option.label}</span>
                       </Card>

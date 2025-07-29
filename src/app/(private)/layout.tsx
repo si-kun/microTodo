@@ -5,9 +5,9 @@ import React, { ReactNode } from "react";
 const PrivateLayout = ({ children }: { children: ReactNode }) => {
   return (
     <AuthGuard>
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen w-screen">
           <Header />
-          <div className="bg-gray-100 w-screen h-full pt-4">{children}</div>
+          <div className="flex-1 bg-gray-100 p-4 overflow-hidden">{children}</div>
         </div>
     </AuthGuard>
   );

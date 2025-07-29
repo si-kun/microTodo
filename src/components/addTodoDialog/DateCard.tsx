@@ -10,12 +10,13 @@ interface DateCardProps {
   hasDeadline: boolean;
   control: Control<CreateTodoSchema>;
   setValue: UseFormSetValue<CreateTodoSchema>;
+  disabled? : boolean;
 }
 
-const DateCard = ({ hasDeadline, control, setValue }: DateCardProps) => {
+const DateCard = ({ hasDeadline, control, setValue,disabled }: DateCardProps) => {
   return (
     <Card className="p-4">
-      {!hasDeadline && (
+      {hasDeadline && (
         <div className="flex flex-col gap-4">
           <Controller
             control={control}
@@ -46,9 +47,10 @@ const DateCard = ({ hasDeadline, control, setValue }: DateCardProps) => {
       <div className="flex items-center gap-1">
         <Checkbox
           id="hasDeadline"
-          checked={hasDeadline}
+          checked={!hasDeadline}
+          disabled={disabled}
           onCheckedChange={
-            (checked) => setValue("hasDeadline", checked === true) // 値を更新
+            (checked) => setValue("hasDeadline", checked === false) // 値を更新
           }
         />
         <Label htmlFor="hasDeadline">日付未定</Label>

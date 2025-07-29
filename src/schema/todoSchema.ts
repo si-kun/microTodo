@@ -6,9 +6,17 @@ export const createTodoSchema = z.object({
     hasDeadline: z.boolean(),
     startDate: z.date().optional().transform(val => val ?? undefined),
     dueDate: z.date().optional().transform(val => val ?? undefined),
-    category: z.string(),
+    category: z.string().default("未分類"),
     categoryColor: z.string().optional(),
     priority: z.enum(["low", "normal", "high"]).default("low"),
+
+    checkLists: z.array(
+        z.object({
+            title: z.string(),
+            completed: z.boolean().default(false),
+            order: z.number().default(0)
+        })
+    ).default([]),
 })
 
 export type CreateTodoSchema = z.infer<typeof createTodoSchema>
