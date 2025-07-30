@@ -1,10 +1,11 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server";
+import { AuthResponse } from "@/types/api";
 
 
 
-export const signout = async() => {
+export const signout = async(): Promise<AuthResponse> => {
     try {
 
         const supabase = await createClient();

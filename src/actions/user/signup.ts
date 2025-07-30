@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { AuthResponse } from "@/types/api";
 
 interface SignupData {
   email: string;
@@ -10,7 +11,7 @@ interface SignupData {
   avatarUrl?: string; // オプションのフィールド
 }
 
-export const signup = async (data: SignupData) => {
+export const signup = async (data: SignupData): Promise<AuthResponse> => {
   try {
     const supabase = await createClient();
 
@@ -41,7 +42,6 @@ export const signup = async (data: SignupData) => {
         updatedAt: new Date(),
         username: data.username,
         avatarUrl: data.avatarUrl || null,
-
       },
     });
 
@@ -49,9 +49,14 @@ export const signup = async (data: SignupData) => {
       return {
         success: true,
         message: "登録が完了しました",
-        user: supabaseAuth.data.user,
       };
     }
+
+    return {
+      success: false,
+      message: "ユーザー登録に失敗しました",
+    };
+    
   } catch (error) {
     console.error("Signup failed:", error);
     return {

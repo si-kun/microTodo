@@ -8,7 +8,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { TodoCompleteType } from "@/atom/todo";
 import DateCard from "./DateCard";
 import ChecklistDialog from "../checklistDialog/ChecklistDialog";
 import { useTodoForm } from "@/hooks/useTodoForm";
@@ -17,10 +16,11 @@ import TodoTitleField from "./TodoTitleField";
 import CategorySelector from "./CategorySelector";
 import PriorityField from "./PriorityField";
 import TodoDialogFooter from "./TodoDialogFooter";
+import { TodoWithIncludes } from "@/types/api";
 
 interface TodoDialogProps {
   mode: "create" | "edit" | "view";
-  todo?: TodoCompleteType;
+  todo?: TodoWithIncludes;
   isOpen?: boolean;
   onClose?: () => void;
 }

@@ -1,8 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/types/api";
+import { Todo } from "@prisma/client";
 
-export const toggleTodo = async (id: string) => {
+export const toggleTodo = async (id: string): Promise<ApiResponse<Todo>> => {
   try {
     const currentTodo = await prisma.todo.findUnique({
       where: { id },
@@ -12,6 +14,7 @@ export const toggleTodo = async (id: string) => {
       return {
         success: false,
         message: "Todoが見つかりません",
+        data: null,
       };
     }
 
@@ -23,7 +26,7 @@ export const toggleTodo = async (id: string) => {
       include: {
         category: true,
         user: true,
-      }
+      },
     });
 
     return {
@@ -37,7 +40,6 @@ export const toggleTodo = async (id: string) => {
     console.error(error);
     return {
       success: false,
-
       message: "Todoの完了に失敗しました",
       data: null,
     };

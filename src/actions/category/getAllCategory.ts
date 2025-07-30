@@ -1,13 +1,25 @@
 "use server"
 
 import { prisma } from "@/lib/prisma";
+import { ApiResponse } from "@/types/api";
+import { checkAuth } from "@/utils/auth";
+import { Category } from "@prisma/client";
 
-export const getAllCategory = async (userId: string) => {
+export const getAllCategory = async (): Promise<ApiResponse<Category[]>> => {
     try {
+
+        const authResult = await checkAuth();
+        if(!authResult.success) {
+            return {
+                success: false,
+                message: authResult.message,
+                data: null
+            }
+        }
 
         const result = await prisma.category.findMany({
             where: {
-                userId,
+                userId: authResult.data!.id,
             },
         })
 
@@ -15,7 +27,7 @@ export const getAllCategory = async (userId: string) => {
             return {
                 success: false,
                 message: "カテゴリーを取得できませんでした",
-                data: null
+                data: []
             }
         }
 
@@ -30,7 +42,7 @@ export const getAllCategory = async (userId: string) => {
         return {
             success: false,
             message: "カテゴリーの取得に失敗しました",
-            data: null
+            data: []
         };
     }
 }

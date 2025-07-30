@@ -1,5 +1,5 @@
-import { TodoCompleteType } from "@/atom/todo";
 import { createTodoSchema, CreateTodoSchema } from "@/schema/todoSchema";
+import { TodoWithIncludes } from "@/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckListItem } from "@prisma/client";
 import { useEffect } from "react";
@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 
 interface useTodoFormProps {
   mode: "create" | "edit" | "view";
-  todo?: TodoCompleteType;
+  todo?: TodoWithIncludes;
 }
 
 export const useTodoForm = ({ mode, todo }: useTodoFormProps) => {

@@ -1,6 +1,6 @@
-import { getAllTodos } from "@/actions/getAllTodos";
+import { getAllTodos } from "@/actions/todo/getAllTodos";
 import { todosAtom } from "@/atom/todo";
-import { Todo } from "@prisma/client";
+import { TodoWithIncludes } from "@/types/api";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -55,7 +55,7 @@ export const useTodos = (options: UseTodosOptions = {}) => {
 
   // Todoの更新、削除、追加のヘルパー関数
   const updateTodoInState = useCallback(
-    (updatedTodo: Todo) => {
+    (updatedTodo: TodoWithIncludes) => {
       setTodos((prev) =>
         prev.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
       );
@@ -64,7 +64,7 @@ export const useTodos = (options: UseTodosOptions = {}) => {
   );
 
   const addTodoToState = useCallback(
-    (newTodo: Todo) => {
+    (newTodo: TodoWithIncludes) => {
       setTodos((prev) => [...prev, newTodo]);
     },
     [setTodos]

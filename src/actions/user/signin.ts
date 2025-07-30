@@ -2,8 +2,9 @@
 
 import { AuthFormData } from "@/components/auth/AuthForm";
 import { createClient } from "@/lib/supabase/server";
+import { AuthResponse } from "@/types/api";
 
-export const signin = async (data: AuthFormData) => {
+export const signin = async (data: AuthFormData): Promise<AuthResponse> => {
     try {
 
         const supabase = await createClient();

@@ -1,26 +1,24 @@
-import { addTodo } from '@/actions/addTodo';
-import { updateTodo } from '@/actions/updateTodo';
-import { TodoCompleteType, todosAtom } from '@/atom/todo';
-import { CreateTodoSchema } from '@/schema/todoSchema';
-import { useSetAtom } from 'jotai';
-import  { useState } from 'react'
-import toast from 'react-hot-toast';
+import { addTodo } from "@/actions/todo/addTodo";
+import { updateTodo } from "@/actions/todo/updateTodo";
+import { todosAtom } from "@/atom/todo";
+import { CreateTodoSchema } from "@/schema/todoSchema";
+import { TodoWithIncludes } from "@/types/api";
+import { useSetAtom } from "jotai";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface UseTodoActionsProps {
-    mode: 'create' | 'edit' | 'view';
-    todo?: TodoCompleteType;
-    onSuccess: () => void;
+  mode: "create" | "edit" | "view";
+  todo?: TodoWithIncludes;
+  onSuccess: () => void;
 }
 
+const useTodoActions = ({ mode, todo, onSuccess }: UseTodoActionsProps) => {
+  const [isLoading, setIsLoading] = useState(false);
 
-const useTodoActions = ({mode,todo,onSuccess}:UseTodoActionsProps) => {
+  const setTodos = useSetAtom(todosAtom);
 
-    const [isLoading, setIsLoading] = useState(false);
-
-    const setTodos = useSetAtom(todosAtom);
-
-
-      // Todoの追加処理
+  // Todoの追加処理
   const handleSubmitTodo = async (data: CreateTodoSchema) => {
     console.log(data);
 
@@ -45,10 +43,10 @@ const useTodoActions = ({mode,todo,onSuccess}:UseTodoActionsProps) => {
         toast.success(result.message);
 
         if (mode === "create") {
-          setTodos((prev) => [...prev, result.data]);
+          setTodos((prev) => [...prev, result.data!]);
         } else {
           setTodos((prev) =>
-            prev.map((t) => (t.id === result.data.id ? result.data : t))
+            prev.map((t) => (t.id === result.data!.id ? result.data! : t))
           );
         }
         onSuccess();
@@ -61,11 +59,10 @@ const useTodoActions = ({mode,todo,onSuccess}:UseTodoActionsProps) => {
     }
   };
 
-    return {
-        isLoading,
-        handleSubmitTodo,
-    };
+  return {
+    isLoading,
+    handleSubmitTodo,
+  };
+};
 
-}
-
-export default useTodoActions
+export default useTodoActions;

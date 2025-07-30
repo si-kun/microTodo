@@ -2,18 +2,22 @@
 
 import { prisma } from "@/lib/prisma";
 import { CreateTodoSchema } from "@/schema/todoSchema";
-import { getUser } from "./user/getUser";
+import { ApiResponse, TodoWithIncludes } from "@/types/api";
+import { checkAuth } from "@/utils/auth";
 
-export const addTodo = async (data: CreateTodoSchema) => {
+export const addTodo = async (data: CreateTodoSchema) : Promise<ApiResponse<TodoWithIncludes>> => {
   try {
-    const userResult = await getUser();
-    if (!userResult.success || !userResult.user) {
+    const authResult = await checkAuth()
+
+    if(!authResult.success) {
       return {
         success: false,
-        message: userResult.message || "ユーザー情報の取得に失敗しました",
+        message: "認証に失敗しました",
         data: null,
-      };
+      }
     }
+
+    const userId = authResult.data!.id
 
     if (!data.startDate && !data.dueDate) {
       data.hasDeadline = false;
@@ -30,14 +34,16 @@ export const addTodo = async (data: CreateTodoSchema) => {
     const category = await prisma.category.upsert({
       where: {
         userId_name: {
-          userId: userResult.user.id,
+          userId,
           name: categoryName,
         },
       },
-      update: {},
+      update: {
+        color: data.categoryColor || "#f0f0f0",
+      },
       create: {
         name: categoryName,
-        userId: userResult.user.id,
+        userId,
         color: data.categoryColor || "#f0f0f0",
       },
     });
@@ -50,7 +56,7 @@ export const addTodo = async (data: CreateTodoSchema) => {
         startDate: data.startDate,
         dueDate: data.dueDate,
         isPriority: data.priority,
-        userId: userResult.user.id,
+        userId,
         categoryId: category.id,
         checkList: {
           create: data.checkList.map((item,index) => ({

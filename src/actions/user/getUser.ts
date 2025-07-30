@@ -2,8 +2,10 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
+import { ApiResponse } from "@/types/api"
+import { User } from "@prisma/client"
 
-export const getUser = async () => {
+export const getUser = async () : Promise<ApiResponse<User>> => {
   try {
 
     const supabase = await createClient()
@@ -15,7 +17,7 @@ export const getUser = async () => {
       return {
         success: false,
         message: "ユーザーの取得に失敗しました",
-        user: null
+        data: null
       }
     }
 
@@ -23,7 +25,7 @@ export const getUser = async () => {
       return {
         success: false,
         message: "ログインが必要です",
-        user: null
+        data: null
       }
     }
 
@@ -34,10 +36,18 @@ export const getUser = async () => {
       },
     })
 
+    if (!prismaUser) {
+      return {
+        success: false,
+        message: "ユーザー情報が見つかりません",
+        data: null
+      }
+    }
+
     return {
       success: true,
       message: "ユーザーの取得に成功しました",
-      user: prismaUser,
+      data: prismaUser,
     }
 
   } catch (error) {
@@ -45,7 +55,7 @@ export const getUser = async () => {
     return {
       success: false,
       message: "ユーザー情報の取得に失敗しました",
-      user: null
+      data: null
     }
   }
 }
