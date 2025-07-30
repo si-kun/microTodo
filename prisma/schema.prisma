@@ -46,7 +46,7 @@ model Todo {
   categoryId String?
   category Category? @relation(fields: [categoryId], references: [id],onDelete: SetNull)
   tags String[]
-  checkLists CheckListItem[]
+  checkList CheckListItem[]
   @@index([userId])
 
   @@index([userId, completed])

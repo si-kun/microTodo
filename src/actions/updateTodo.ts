@@ -53,7 +53,7 @@ export const updateTodo = async (todoId: string, data: CreateTodoSchema) => {
       include: {
         category: true,
         user: true,
-        checkLists: true,
+        checkList: true,
       },
     });
 

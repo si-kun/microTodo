@@ -2,14 +2,14 @@
 import { Category, CheckListItem, Todo } from "@prisma/client";
 import {atom} from "jotai";
 
-export type TodoWithCategoryChecklist = Todo & {
+export type TodoCompleteType = Todo & {
     category?: Category | null;
-    checkLists: CheckListItem[];
+    checkList: CheckListItem[];
 } 
 
-export const todosAtom = atom<TodoWithCategoryChecklist[]>([])
+export const todosAtom = atom<TodoCompleteType[]>([])
 
-export const filteredTodosAtom = atom<TodoWithCategoryChecklist[]>([])
+export const filteredTodosAtom = atom<TodoCompleteType[]>([])
 export const todoFilterAtom = atom<"all" | "incomplete" | "completed">("all")
 
 export const searchTodoTerm = atom<string>("")

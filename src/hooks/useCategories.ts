@@ -16,8 +16,6 @@ export const useCategories = ({autoFetch}:UseCategoriesProps) => {
     const [categories, setCategories] = useAtom(categoryAtom)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    
-
 
     const fetchCategories = useCallback(async () => {
 

@@ -23,7 +23,7 @@ export const getAllTodos = async() => {
             include: {
                 category: true,
                 user: true,
-                checkLists: {
+                checkList: {
                     orderBy: {
                         order: "asc",
                     },

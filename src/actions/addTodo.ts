@@ -52,8 +52,8 @@ export const addTodo = async (data: CreateTodoSchema) => {
         isPriority: data.priority,
         userId: userResult.user.id,
         categoryId: category.id,
-        checkLists: {
-          create: data.checkLists.map((item,index) => ({
+        checkList: {
+          create: data.checkList.map((item,index) => ({
             title: item.title.trim(),
             completed: item.completed,
             order: index + 1,
@@ -64,7 +64,7 @@ export const addTodo = async (data: CreateTodoSchema) => {
       include: {
         category: true,
         user: true,
-        checkLists: true,
+        checkList: true,
       },
     });
 

@@ -18,33 +18,20 @@ import { Checkbox } from "../ui/checkbox";
 import { ScrollArea } from "../ui/scroll-area";
 import { CheckListItem } from "@prisma/client";
 import { Label } from "../ui/label";
+import { CreateTodoSchema } from "@/schema/todoSchema";
 
 interface ChecklistDialogProps {
-  checkLists: {
+  checkList: {
     title: string;
     order: number;
     completed: boolean;
   }[];
-  setValue: UseFormSetValue<{
-    title: string;
-    completed: boolean;
-    hasDeadline: boolean;
-    category: string;
-    priority: "low" | "normal" | "high";
-    checkLists: {
-      title: string;
-      order: number;
-      completed: boolean;
-    }[];
-    startDate?: Date | undefined;
-    dueDate?: Date | undefined;
-    categoryColor?: string | undefined;
-  }>;
+  setValue: UseFormSetValue<CreateTodoSchema>;
   triggerText: string;
 }
 
 const ChecklistDialog = ({
-  checkLists,
+  checkList,
   setValue,
   triggerText,
 }: ChecklistDialogProps) => {
@@ -52,10 +39,10 @@ const ChecklistDialog = ({
   const [checkDialogOpen, setCheckDialogOpen] = useState(false);
 
   //チェックリストの総数
-  const totalChecklists = checkLists.length;
+  const totalChecklist = checkList.length;
 
   //完了済みのチェックリスト
-  const completedChecklists = checkLists.filter(item => item.completed).length;
+  const completedChecklist = checkList.filter(item => item.completed).length;
 
   const handleAddChecklist = () => {
     if (checklistTitle.trim() === "") {
@@ -65,16 +52,16 @@ const ChecklistDialog = ({
 
     const newCheckList = {
       title: checklistTitle.trim(),
-      order: checkLists.length + 1,
+      order: checkList.length + 1,
       completed: false,
     };
 
-    setValue("checkLists", [...checkLists, newCheckList]);
+    setValue("checkList", [...checkList, newCheckList]);
     setChecklistTitle("");
   };
 
   const handleToggleChecklist = (index: number) => {
-    const updatedCheckLists = checkLists.map((item) => {
+    const updatedCheckList = checkList.map((item) => {
       if (item.order === index) {
         return {
           ...item,
@@ -83,12 +70,12 @@ const ChecklistDialog = ({
       }
       return item;
     });
-    setValue("checkLists", updatedCheckLists as CheckListItem[]);
+    setValue("checkList", updatedCheckList as CheckListItem[]);
   };
 
   const handleDeleteChecklist = (index: number) => {
-    const updatedCheckLists = checkLists.filter((item) => item.order !== index);
-    setValue("checkLists", updatedCheckLists as CheckListItem[]);
+    const updatedCheckList = checkList.filter((item) => item.order !== index);
+    setValue("checkList", updatedCheckList as CheckListItem[]);
   };
 
   const handleCloseDialog = () => {
@@ -110,7 +97,7 @@ const ChecklistDialog = ({
         <DialogHeader>
           <DialogTitle>チェックリスト項目の作成</DialogTitle>
           <DialogDescription>
-            <span>チェックリストの数 {completedChecklists} / {totalChecklists}</span>
+            <span>チェックリストの数 {completedChecklist} / {totalChecklist}</span>
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-1">
@@ -124,12 +111,12 @@ const ChecklistDialog = ({
             <ListPlus />
           </Button>
         </div>
-        {checkLists.length === 0 ? (
+        {checkList.length === 0 ? (
           <span className="text-">チェックリストが登録されていません</span>
         ) : (
           <ScrollArea className="flex-1 min-h-0">
             <ul className="flex flex-col gap-5">
-              {checkLists.map((item, index) => (
+              {checkList.map((item, index) => (
                 <li key={index + 1} className="flex items-center gap-2">
                   <Checkbox
                     checked={item.completed}
