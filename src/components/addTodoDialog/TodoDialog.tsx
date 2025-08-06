@@ -8,14 +8,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import DateCard from "./DateCard";
+import DateCard from "./components/DateCard";
 import ChecklistDialog from "../checklistDialog/ChecklistDialog";
 import { useTodoForm } from "@/hooks/useTodoForm";
 import useTodoActions from "@/hooks/useTodoActions";
-import TodoTitleField from "./TodoTitleField";
-import CategorySelector from "./CategorySelector";
-import PriorityField from "./PriorityField";
-import TodoDialogFooter from "./TodoDialogFooter";
+import TodoTitleField from "./components/TodoTitleField";
+import CategorySelector from "./components/CategorySelector";
+import PriorityField from "./components/PriorityField";
+import TodoDialogFooter from "./components/TodoDialogFooter";
 import { TodoWithIncludes } from "@/types/api";
 
 interface TodoDialogProps {

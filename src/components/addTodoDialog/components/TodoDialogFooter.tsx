@@ -1,7 +1,7 @@
 import React from 'react'
-import { DialogClose, DialogFooter } from '../ui/dialog'
-import LoadingButton from '../button/LoadingButton'
-import { Button } from '../ui/button'
+import { DialogClose, DialogFooter } from '../../ui/dialog'
+import LoadingButton from '../../button/LoadingButton'
+import { Button } from '../../ui/button'
 import { UseFormReset } from 'react-hook-form';
 import { CreateTodoSchema } from '@/schema/todoSchema';
 

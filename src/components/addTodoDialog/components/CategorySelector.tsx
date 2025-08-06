@@ -1,7 +1,7 @@
 import React from "react";
-import { Card } from "../ui/card";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
+import { Card } from "../../ui/card";
+import { Label } from "../../ui/label";
+import { Input } from "../../ui/input";
 import {
   Select,
   SelectContent,
@@ -10,7 +10,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "../../ui/select";
 import {
   UseFormRegister,
   UseFormSetValue,
@@ -59,6 +59,7 @@ const CategorySelector = ({
           className="w-[100px] border-none"
           {...register("categoryColor")}
           disabled={isReadOnly}
+          data-testid="category-color-input"
         />
       </div>
       <div className="flex items-center gap-4">

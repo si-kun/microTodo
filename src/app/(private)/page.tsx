@@ -1,9 +1,9 @@
 "use client";
 
 import TodoList from "@/components/todoList/TodoList";
-import SelectFilterTodos from "@/components/todoList/SelectFilterTodos";
-import TodoProgress from "@/components/todoList/TodoProgress";
-import SearchTodo from "@/components/todoList/SearchTodo";
+import SelectFilterTodos from "@/components/todoList/components/SelectFilterTodos";
+import TodoProgress from "@/components/todoList/components/TodoProgress";
+import SearchTodo from "@/components/todoList/components/SearchTodo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 export default function Home() {
   return (

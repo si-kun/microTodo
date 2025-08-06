@@ -1,4 +1,4 @@
-import { Progress } from "../ui/progress";
+import { Progress } from "../../ui/progress";
 import { useAtomValue } from "jotai";
 import { todosAtom } from "@/atom/todo";
 

@@ -8,7 +8,7 @@ import { searchTodoTerm, todoFilterAtom } from "@/atom/todo";
 import { deleteTodo } from "@/actions/todo/deleteTodo";
 import toast from "react-hot-toast";
 import { toggleTodo } from "@/actions/todo/toggleTodo";
-import TodoCardButton from "./TodoCardButton";
+import TodoCardButton from "./components/TodoCardButton";
 import TodoDialog from "../addTodoDialog/TodoDialog";
 import { CheckListItem, Todo } from "@prisma/client";
 import Skeleton from "../Loading/Skeleton";

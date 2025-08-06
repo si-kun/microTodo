@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "../../ui/select";
 import { useAtom, useAtomValue } from "jotai";
 import { todoFilterAtom, todosAtom } from "@/atom/todo";
 

@@ -1,8 +1,8 @@
 import React from 'react'
-import { Label } from '../ui/label'
+import { Label } from '../../ui/label'
 import { Control, Controller } from 'react-hook-form'
 import { PRIORITY_OPTIONS } from '@/constants/priority'
-import { Card } from '../ui/card'
+import { Card } from '../../ui/card'
 import { CreateTodoSchema } from '@/schema/todoSchema'
 
 interface PriorityFieldProps {
@@ -22,6 +22,7 @@ const PriorityField = ({control,isReadOnly}:PriorityFieldProps) => {
           {PRIORITY_OPTIONS.map((option) => (
             <Card
               key={option.value}
+              role='radio'
               className={`text-center cursor-pointer border-2 ${
                 field.value === option.value
                   ? `${option.borderClass} ${option.bgClass} ${option.hoverClass}` // 選択されている場合のスタイル

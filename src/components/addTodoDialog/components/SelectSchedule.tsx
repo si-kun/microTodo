@@ -1,9 +1,9 @@
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { ChevronDownIcon } from "lucide-react";
-import { Calendar } from "../ui/calendar";
+import { Calendar } from "../../ui/calendar";
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Label } from "../ui/label";
+import { Button } from "../../ui/button";
+import { Label } from "../../ui/label";
 
 interface SelectScheduleProps {
   labelName: string;
@@ -29,8 +29,9 @@ const SelectSchedule = ({ labelName, id, value, onChange, disabled }: SelectSche
             id={id}
             disabled={disabled}
             className="w-full justify-between font-normal"
+            data-testid={`select-${id}`}
           >
-            {value ? value.toLocaleDateString("ja-JP") : "Select date"}
+            {value ? value.toLocaleDateString("ja-JP") : "日付を選択してください"}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>

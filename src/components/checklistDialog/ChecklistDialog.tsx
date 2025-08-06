@@ -97,7 +97,7 @@ const ChecklistDialog = ({
         <DialogHeader>
           <DialogTitle>チェックリスト項目の作成</DialogTitle>
           <DialogDescription>
-            <span>チェックリストの数 {completedChecklist} / {totalChecklist}</span>
+            <span data-testid="checkCount">チェックリストの数 {completedChecklist} / {totalChecklist}</span>
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-1">
@@ -107,7 +107,7 @@ const ChecklistDialog = ({
             value={checklistTitle}
             onChange={(e) => setChecklistTitle(e.target.value)}
           />
-          <Button variant={"secondary"} onClick={handleAddChecklist}>
+          <Button data-testid="addChecklist-button" variant={"secondary"} onClick={handleAddChecklist}>
             <ListPlus />
           </Button>
         </div>
@@ -122,6 +122,7 @@ const ChecklistDialog = ({
                     checked={item.completed}
                     id={String(item.order)}
                     onClick={() => handleToggleChecklist(item.order)}
+                    data-testid={`checklist-${item.order}`}
                   />
                   <Label htmlFor={String(item.order)}>{item.title}</Label>
                   <Button
@@ -129,6 +130,7 @@ const ChecklistDialog = ({
                     variant={"destructive"}
                     type="button"
                     className="h-6 w-7 p-1 ml-auto"
+                    data-testid={`deleteChecklist-${item.order}`}
                   >
                     <Delete />
                   </Button>
@@ -142,6 +144,7 @@ const ChecklistDialog = ({
           variant={"secondary"}
           type="button"
           onClick={handleCloseDialog}
+          data-testid="closeChecklistDialog-button"
         >
           Close
         </Button>

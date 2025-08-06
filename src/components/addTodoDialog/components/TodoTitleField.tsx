@@ -1,6 +1,6 @@
 import React from "react";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
+import { Label } from "../../ui/label";
+import { Input } from "../../ui/input";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { CreateTodoSchema } from "@/schema/todoSchema";
 

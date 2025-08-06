@@ -1,9 +1,9 @@
 import React from "react";
-import { Card } from "../ui/card";
+import { Card } from "../../ui/card";
 import { Control, Controller, UseFormSetValue } from "react-hook-form";
 import SelectSchedule from "./SelectSchedule";
-import { Checkbox } from "../ui/checkbox";
-import { Label } from "../ui/label";
+import { Checkbox } from "../../ui/checkbox";
+import { Label } from "../../ui/label";
 import { CreateTodoSchema } from "@/schema/todoSchema";
 
 interface DateCardProps {
