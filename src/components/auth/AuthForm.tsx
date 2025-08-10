@@ -1,6 +1,9 @@
 "use client";
 
+import { signin } from "@/actions/user/signin";
 import { signup } from "@/actions/user/signup";
+import { uploadImageToSupabase } from "@/actions/user/uploadAvatar";
+import { updateUserAvatar } from "@/actions/user/updateUserAvater";
 import ErrorMessage from "@/components/error/ErrorMessage";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,10 +17,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 import { Separator } from "../ui/separator";
-import { signin } from "@/actions/user/signin";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { uploadImageToSupabase } from "@/actions/user/uploadAvatar";
-import { updateUserAvatar } from "@/actions/user/updateUserAvater";
 
 export const signinSchema = z.object({
   email: z.string().email("有効なメールアドレスを入力してください"),
