@@ -1,45 +1,40 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { deleteTodo } from "@/actions/todo/deleteTodo";
+import { toggleTodo } from "@/actions/todo/toggleTodo";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
-import {  useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { searchTodoTerm, todoFilterAtom } from "@/atom/todo";
-import { deleteTodo } from "@/actions/todo/deleteTodo";
 import toast from "react-hot-toast";
-import { toggleTodo } from "@/actions/todo/toggleTodo";
 import TodoCardButton from "./components/TodoCardButton";
 import TodoDialog from "../addTodoDialog/TodoDialog";
-import { CheckListItem, Todo } from "@prisma/client";
 import Skeleton from "../Loading/Skeleton";
 import LoadingCard from "../Loading/LoadingCard";
 import { useTodos } from "@/hooks/useTodos";
-
-interface TodoWithLoading extends Todo {
-  isDeleting?: boolean;
-  isToggling?: boolean;
-  category?: {
-    name: string;
-    color: string;
-  } | null;
-  checkLists: CheckListItem[];
-}
+import { TodoWithIncludes } from "@/types/api";
 
 const TodoList = () => {
-
-  const {todos,isLoading,updateTodoInState,removeTodoFromState} = useTodos({
-    autoFetch: true,
-  })
+  const { todos, isLoading, updateTodoInState, removeTodoFromState } = useTodos(
+    {
+      autoFetch: true,
+    }
+  );
 
   const filter = useAtomValue(todoFilterAtom);
 
-  const [displayTodos, setDisplayTodos] = useState<TodoWithLoading[]>([]);
+  const [displayTodos, setDisplayTodos] = useState<TodoWithIncludes[]>([]);
   const searchTerm = useAtomValue(searchTodoTerm);
 
-  console.log(displayTodos);
+  console.log("=== TodoList Debug ===");
+  console.log("filter:", filter, typeof filter);
+  console.log("searchTerm:", searchTerm, typeof searchTerm);
+  console.log("filter !== 'all':", filter !== "all");
+  console.log("=====================");
 
   useEffect(() => {
-    let result: TodoWithLoading[] = todos.map((todo) => {
+    let result: TodoWithIncludes[] = todos.map((todo) => {
       return {
         ...todo,
         isDeleting: false,
@@ -60,9 +55,10 @@ const TodoList = () => {
     }
 
     // 2 検索機能
-    if (searchTerm.trim()) {
+    const safeSearchTerm = typeof searchTerm === "string" ? searchTerm : "";
+    if (safeSearchTerm.trim()) {
       result = result.filter((todo) =>
-        todo.title.toLowerCase().includes(searchTerm.toLowerCase())
+        todo.title.toLowerCase().includes(safeSearchTerm.toLowerCase())
       );
     }
 
@@ -70,7 +66,7 @@ const TodoList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todos, filter, searchTerm]);
 
-
+  console.log("displayTodos", displayTodos);
 
   const handleDelete = async (id: string) => {
     try {
@@ -129,10 +125,11 @@ const TodoList = () => {
     }
   };
 
-  const getEmptyMessage = () => {
-    const hasSearchTerm = searchTerm.trim().length > 0;
+  const getEmptyMessage = useCallback(() => {
+    const safeSearchTerm = typeof searchTerm === "string" ? searchTerm : "";
+    const hasSearchTerm = safeSearchTerm.trim().length > 0;
     const hasFilter = filter !== "all";
-
+  
     if (hasSearchTerm && hasFilter) {
       return "該当するTodoがありません";
     } else if (hasSearchTerm) {
@@ -142,7 +139,7 @@ const TodoList = () => {
     } else {
       return "Todoがありません";
     }
-  };
+  }, [searchTerm, filter]);
 
   if (isLoading) {
     return <Skeleton />;
@@ -158,7 +155,11 @@ const TodoList = () => {
         <ul className="flex flex-col gap-2 w-full">
           {displayTodos.map((todo) => {
             const today = new Date();
-            const expired = todo.hasDeadline && !todo.completed && todo.dueDate && todo.dueDate < today;
+            const expired =
+              todo.hasDeadline &&
+              !todo.completed &&
+              todo.dueDate &&
+              todo.dueDate < today;
             return (
               <li
                 key={todo.id}
@@ -197,7 +198,13 @@ const TodoList = () => {
                               ? todo.startDate?.toLocaleDateString()
                               : "開始は未定です"}
                           </span>
-                          <span className={`text-sm  ${expired ? "text-red-500 font-bold" : "text-gray-500"}`}>
+                          <span
+                            className={`text-sm  ${
+                              expired
+                                ? "text-red-500 font-bold"
+                                : "text-gray-500"
+                            }`}
+                          >
                             期限:
                             {todo.dueDate
                               ? todo.dueDate?.toLocaleDateString()

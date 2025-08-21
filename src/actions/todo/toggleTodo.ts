@@ -26,6 +26,7 @@ export const toggleTodo = async (id: string): Promise<ApiResponse<Todo>> => {
       include: {
         category: true,
         user: true,
+        checkList: true,
       },
     });
 
