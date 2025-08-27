@@ -39,7 +39,10 @@ const ChecklistDialog = ({
   const [checkDialogOpen, setCheckDialogOpen] = useState(false);
 
   //チェックリストの総数
-  const totalChecklist = checkList.length;
+  const totalChecklist = checkList.length || 0;
+  
+  console.log("checkList", checkList);
+  console.log("totalChecklist", totalChecklist);
 
   //完了済みのチェックリスト
   const completedChecklist = checkList.filter(item => item.completed).length;

@@ -27,12 +27,6 @@ const TodoList = () => {
   const [displayTodos, setDisplayTodos] = useState<TodoWithIncludes[]>([]);
   const searchTerm = useAtomValue(searchTodoTerm);
 
-  console.log("=== TodoList Debug ===");
-  console.log("filter:", filter, typeof filter);
-  console.log("searchTerm:", searchTerm, typeof searchTerm);
-  console.log("filter !== 'all':", filter !== "all");
-  console.log("=====================");
-
   useEffect(() => {
     let result: TodoWithIncludes[] = todos.map((todo) => {
       return {
