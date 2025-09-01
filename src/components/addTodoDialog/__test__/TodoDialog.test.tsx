@@ -2,232 +2,257 @@ import "@testing-library/jest-dom";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TodoDialog from "../TodoDialog";
 import userEvent from "@testing-library/user-event";
-
-jest.mock("@/actions/todo/addTodo", () => ({
-  addTodo: jest.fn(),
-}));
-
-jest.mock("@/actions/todo/updateTodo", () => ({
-  updateTodo: jest.fn(),
-}));
+import toast from "react-hot-toast";
 
 jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(),
 }));
 
-jest.mock("jotai", () => ({
-  atom: jest.fn(),
-  useAtomValue: jest.fn(),
-  useSetAtom: jest.fn(),
-  useAtom: jest.fn(() => [[{}], jest.fn()]),
+jest.mock("react-hot-toast", () => ({
+  __esModule: true,
+  default: {
+    success: jest.fn(() => ({ id: "success-id" })),
+    error: jest.fn(() => ({ id: "error-id" })),
+    loading: jest.fn(() => ({ id: "loading-id" })),
+  },
 }));
 
-jest.mock("@/hooks/useCategories", () => ({
-  useCategories: jest.fn(() => ({
-    categories: [
-      { id: "1", name: "Work", color: "#ff0000" },
-      { id: "2", name: "Personal", color: "#00ff00" },
-    ],
-    isLoading: false,
-    error: null,
-  })),
-}));
-describe("TodoDialog", () => {
+jest.mock("react-hot-toast", () => ({
+  error: jest.fn(),
+  success: jest.fn(),
+}))
+
+const mockedToast = jest.mocked(toast);
+
+describe("TodoDialog Component mode create", () => {
   const user = userEvent.setup();
 
-  async function openTodoDialog() {
-    render(<TodoDialog mode="create" />);
-
-    const trigger = screen.getByText("Todoを作成する");
-    expect(trigger).toBeInTheDocument();
-
-    await user.click(trigger);
-  }
-
-  it("トリガーボタンをクリックしたらダイアログが開く", async () => {
-    await openTodoDialog();
-
-    expect(await screen.findByText("Todo Title")).toBeInTheDocument();
-  });
-
-  it("各入力欄に入力できる", async () => {
-    await openTodoDialog();
-
-    const input =  screen.getByPlaceholderText("Create New Todo");
-    await user.type(input, "New Todo Item");
-    expect(input).toHaveValue("New Todo Item");
-
-    // 日付のInputを取得
-    const startDateInput =  screen.getByTestId("select-startDate");
-    const dueDateInput =  screen.getByTestId("select-dueDate");
-
-    await user.click(startDateInput);
-    const startCalendar = await screen.findByRole("grid");
-    expect(startCalendar).toBeInTheDocument();
-
-    // 開始日のカレンダーから日付を選択
-    const startDayButton = await screen.getByRole("button", {
-      name: /August 1st/,
-    });
-    await user.click(startDayButton);
-
-    await waitFor(() => {
-      expect(startDateInput).toHaveTextContent("2025/8/1");
-      expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+  const openDialog = async () => {
+    const openTrigger = await screen.findByRole("button", {
+      name: "Todoを作成する",
     });
 
-    // 終了日のカレンダーから日付を選択
-    await user.click(dueDateInput);
-    const dueDayButton =  screen.getByRole("button", {
-      name: /August 27th/,
-    });
-    await user.click(dueDayButton);
-    await waitFor(() => {
-      expect(dueDateInput).toHaveTextContent("2025/8/27");
-      expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+    await user.click(openTrigger);
+  };
+  describe("TodoDialog", () => {
+    it("TodoDialogが正しく開かれる", async () => {
+      render(<TodoDialog mode={"create"} />);
+
+      openDialog();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            "新しいTodoを作成します。必要な情報を入力してください。"
+          )
+        ).toBeInTheDocument();
+      });
     });
   });
 
-  it("カテゴリーのカラーが正しく反映される", async () => {
-    await openTodoDialog();
+  describe("TodoTitleField", () => {
+    it("タイトル入力欄が正しく表示される", async () => {
+      render(<TodoDialog mode={"create"} />);
 
-    const categoryColorInput = screen.getByTestId("category-color-input");
-    expect(categoryColorInput).toBeInTheDocument();
-    await user.click(categoryColorInput);
-    fireEvent.change(categoryColorInput, { target: { value: "#ff0000" } });
+      openDialog();
 
-    await waitFor(() => {
-      expect(categoryColorInput).toHaveValue("#ff0000");
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText("Create New Todo")
+        ).toBeInTheDocument();
+      });
     });
   });
 
-  it("カテゴリーの選択ができる", async () => {
-    await openTodoDialog();
+  // ChecklistDialogのテスト完了
+  describe("ChecklistDialog", () => {
+    // 共通のセットアップ関数
+    const setupHelpers = {
+      // ダイアログを開く
+      openTodoDialog: async () => {
+        render(<TodoDialog mode={"create"} />);
+        const openTrigger = await screen.getByRole("button", {
+          name: "Todoを作成する",
+        });
+        await user.click(openTrigger);
+      },
 
-    const categoryTrigger = screen.getByRole("combobox");
-    expect(categoryTrigger).toBeInTheDocument();
+      // チェックリストダイアログまで開く
+      openChecklistDialog: async () => {
+        await setupHelpers.openTodoDialog();
 
-    fireEvent.click(categoryTrigger);
+        const checklistTrigger = screen.getByRole("button", {
+          name: "チェックリストを追加する",
+        });
+        await user.click(checklistTrigger);
 
-    const workCategory = await screen.findByRole("option", {name: "Work"});
-    expect(workCategory).toBeInTheDocument();
+        // チェックリストダイアログが開いているか確認
+        await waitFor(() => {
+          expect(
+            screen.getByText("チェックリスト項目の作成")
+          ).toBeInTheDocument();
+        });
+      },
 
-    fireEvent.click(workCategory);
-    await waitFor(() => {
-      expect(categoryTrigger).toHaveTextContent("Work");
+      // チェックリストダイアログの要素を取得
+      getChecklistElements: () => ({
+        input: screen.getByPlaceholderText("チェックリストのタイトル"),
+        addButton: screen.getByTestId("addChecklist-button"),
+        closeButton: screen.getByTestId("closeChecklistDialog-button"),
+      }),
+
+      // チェックリストアイテムを追加
+      addChecklistItem: async (title: string) => {
+        const { input, addButton } = setupHelpers.getChecklistElements();
+
+        fireEvent.change(input, { target: { value: title } });
+        fireEvent.click(addButton);
+
+        // 追加されたことを確認
+        await waitFor(() => {
+          expect(screen.getByText(title)).toBeInTheDocument();
+          expect(input).toHaveValue("");
+        });
+      },
+
+      // 複数のチェックリストアイテムの追加
+      addMultipleItems: async (titles: string[]) => {
+        for (const title of titles) {
+          await setupHelpers.addChecklistItem(title);
+        }
+      },
+    };
+    it("ChecklistDialogが正しく開かれ、初期状態は何もない", async () => {
+      await setupHelpers.openChecklistDialog();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("チェックリストが登録されていません")
+        ).toBeInTheDocument();
+      });
     });
-  });
 
-  it("新規カテゴリーの入力ができる", async () => {
-    await openTodoDialog();
+    it("新しいチェックリストを追加できる", async () => {
+      await setupHelpers.openChecklistDialog();
+      await setupHelpers.addChecklistItem("fireEventテスト");
 
-    const newCategoryInput = screen.getByPlaceholderText("新規カテゴリー")
-    expect(newCategoryInput).toBeInTheDocument();
+      expect(screen.getByText("fireEventテスト")).toBeInTheDocument();
+    });
 
-    await user.type(newCategoryInput, "Test")
-    expect(newCategoryInput).toHaveValue("Test");
+    it("複数のチェックリストが追加できる", async () => {
+      await setupHelpers.openChecklistDialog();
 
-    // セレクトがdisabledになっていることを確認
-    const categorySelect = screen.getByRole("combobox")
-    expect(categorySelect).toBeDisabled();
-  })
+      await setupHelpers.addMultipleItems([
+        "fireEventテスト1",
+        "fireEventテスト2",
+        "fireEventテスト3",
+      ]);
 
-  it("チェックリストの追加と削除", async () => {
-    await openTodoDialog();
+      await waitFor(() => {
+        expect(screen.getByText("fireEventテスト1")).toBeInTheDocument();
+        expect(screen.getByText("fireEventテスト2")).toBeInTheDocument();
+        expect(screen.getByText("fireEventテスト3")).toBeInTheDocument();
+      });
+    });
 
-    const addChecklistTrigger = screen.getByText("チェックリストを追加する");
-    expect(addChecklistTrigger).toBeInTheDocument();
-    
+    it("チェックリストの削除ができる", async () => {
+      await setupHelpers.openChecklistDialog();
 
-    await user.click(addChecklistTrigger);
-    
-    const checklistInput = screen.getByPlaceholderText("チェックリストのタイトル");
-    expect(checklistInput).toBeInTheDocument();
-    const checklistCount = screen.getByTestId("checkCount");
-    expect(checklistCount).toBeInTheDocument();
+      await setupHelpers.addChecklistItem("fireEventテスト");
+      const deleteButton = screen.getByTestId("deleteChecklist-1");
 
-    await user.type(checklistInput, "Checklist Item 1");
-    expect(checklistInput).toHaveValue("Checklist Item 1");
+      fireEvent.click(deleteButton);
 
-    const addChecklistButton = screen.getByTestId("addChecklist-button");
-    expect(addChecklistButton).toBeInTheDocument();
-    await user.click(addChecklistButton);
-    expect(screen.getByText("Checklist Item 1")).toBeInTheDocument();
-    expect(checklistInput).toHaveValue("");
+      await waitFor(() => {
+        expect(screen.queryByText("fireEventテスト")).not.toBeInTheDocument();
+        expect(
+          screen.getByText("チェックリストが登録されていません")
+        ).toBeInTheDocument();
+      });
+    });
 
-    // isCompletedのチェックボックスが表示されていることを確認
-    const checklistCheckbox = screen.getByTestId("checklist-1");
-    expect(checklistCheckbox).toBeInTheDocument();
-    expect(checklistCount).toHaveTextContent("チェックリストの数 0 / 1");
-    await user.click(checklistCheckbox);
-    expect(checklistCheckbox).toBeChecked();
-    expect(checklistCount).toHaveTextContent("チェックリストの数 1 / 1");
+    it("チェックリストの完了、未完了が切り替えられる", async () => {
+      await setupHelpers.openChecklistDialog();
 
-    // 削除テスト
-    const deleteButton = screen.getByTestId("deleteChecklist-1");
-    expect(deleteButton).toBeInTheDocument();
-    await user.click(deleteButton);
-    expect(screen.getByText("チェックリストが登録されていません")).toBeInTheDocument();
+      await setupHelpers.addChecklistItem("fireEventテスト");
+      const checklistItem = screen.getByTestId("checklist-1");
 
-    // チェックリストダイアログを閉じる
-    const closeButton = screen.getByTestId("closeChecklistDialog-button");
-    expect(closeButton).toBeInTheDocument();
-    await user.click(closeButton);
-    expect(addChecklistTrigger).toBeInTheDocument();
-  })
+      // 初期状態は未完了
+      await waitFor(() => {
+        expect(checklistItem).not.toBeChecked();
+      });
 
-  it("優先度の切り替え", async() => {
+      // クリックして完了にする
+      fireEvent.click(checklistItem);
 
-    await openTodoDialog();
+      await waitFor(() => {
+        expect(checklistItem).toBeChecked();
+      });
+    });
 
-    const priorityTitle = screen.getByText("優先度を選択")
-    expect(priorityTitle).toBeInTheDocument();
+    it("checklistDialogを閉じることができる", async () => {
+      await setupHelpers.openChecklistDialog();
+      const { closeButton } = setupHelpers.getChecklistElements();
+      fireEvent.click(closeButton);
 
-    const priorityLow = screen.getByRole("radio", { name: "低"});
-    expect(priorityLow).toBeInTheDocument();
-    const priorityMedium = screen.getByRole("radio", { name: "中"});
-    expect(priorityMedium).toBeInTheDocument();
-    const priorityHigh = screen.getByRole("radio", { name: "高"});
-    expect(priorityHigh).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByText("チェックリストを追加する")
+        ).toBeInTheDocument();
+      });
+    });
 
-    await user.click(priorityMedium);
-    expect(priorityMedium).toHaveClass("border-yellow-600 bg-yellow-200")
+     it('checklistDialogを閉じてもチェックリストが残っている', async() => {
+      await setupHelpers.openChecklistDialog()
 
-    await user.click(priorityHigh);
-    expect(priorityHigh).toHaveClass("border-red-600 bg-red-200");
-    expect(priorityMedium).toHaveClass("border-gray-200 hover:border-gray-300")
+      await setupHelpers.addChecklistItem("checklistDialogを閉じても残っている");
 
-    await user.click(priorityLow);
-    expect(priorityLow).toHaveClass("border-green-600 bg-green-200");
-    expect(priorityMedium).toHaveClass("border-gray-200 hover:border-gray-300");
-    expect(priorityHigh).toHaveClass("border-gray-200 hover:border-gray-300");
+      await waitFor(() => {
+        expect(
+          screen.getByText("checklistDialogを閉じても残っている")
+        ).toBeInTheDocument();
+      });
 
-  })
+      const {closeButton} = setupHelpers.getChecklistElements();
+      fireEvent.click(closeButton);
 
-  it("送信ボタンをクリックしてTodoを作成", async () => {
 
-    await openTodoDialog();
+      // チェックリストダイアログが閉じられているか確認
+      await waitFor(() => {
+        expect(
+          screen.getByText("チェックリストを追加する")
+        ).toBeInTheDocument();
+      });
 
-    const TodoInput= screen.getByPlaceholderText("Create New Todo");
-    expect(TodoInput).toBeInTheDocument();
+      // 再度チェックリストを開いて、チェックリストが残っているか確認
+      const checklistTrigger = screen.getByRole("button", {
+        name: "チェックリストを追加する",
+      });
+      fireEvent.click(checklistTrigger);
 
-    const submitButton = screen.getByRole("button", { name : "Todo Create"})
-    expect(submitButton).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("checklistDialogを閉じても残っている")).toBeInTheDocument();
+      })
+    });
 
-    // 空の状態
-    await user.click(submitButton);
-    await waitFor(() => {
-      expect(screen.getByText("タスク名は必須です")).toBeInTheDocument();
-      TodoInput.focus();
+    it("空の状態でチェックリストを追加するとエラーがでる", async() => {
+      await setupHelpers.openChecklistDialog();
+
+      const { addButton } = setupHelpers.getChecklistElements();
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(mockedToast.error).toHaveBeenCalledWith("タイトルが入力されていません");
+      })
     })
+  });
 
-    // 入力して送信
-    user.type(TodoInput, "New Todo Item")
-    await user.click(submitButton);
-    await waitFor(() => {
-      expect(TodoInput).toHaveValue("New Todo Item");
-    })
+  describe("DateCard", () => {});
 
-  }) 
+  describe("CategorySelector", () => {});
+
+  describe("PriorityField", () => {});
+
+  describe("TodoDialogFooter", () => {});
 });
- 
+

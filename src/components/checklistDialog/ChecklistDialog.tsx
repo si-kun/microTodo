@@ -40,9 +40,6 @@ const ChecklistDialog = ({
 
   //チェックリストの総数
   const totalChecklist = checkList.length || 0;
-  
-  console.log("checkList", checkList);
-  console.log("totalChecklist", totalChecklist);
 
   //完了済みのチェックリスト
   const completedChecklist = checkList.filter(item => item.completed).length;
@@ -90,6 +87,7 @@ const ChecklistDialog = ({
     <Dialog open={checkDialogOpen} onOpenChange={setCheckDialogOpen}>
       <DialogTrigger asChild>
         <Button
+          type="button"
           variant={"secondary"}
           className="border-dashed shadow-none border-2 border-gray-100 bg-transparent"
         >
@@ -110,7 +108,7 @@ const ChecklistDialog = ({
             value={checklistTitle}
             onChange={(e) => setChecklistTitle(e.target.value)}
           />
-          <Button data-testid="addChecklist-button" variant={"secondary"} onClick={handleAddChecklist}>
+          <Button type="button" data-testid="addChecklist-button" variant={"secondary"} onClick={handleAddChecklist}>
             <ListPlus />
           </Button>
         </div>
