@@ -68,7 +68,7 @@ const CategorySelector = ({
           onValueChange={handleCategorySelect}
           disabled={hasCustomInput || isReadOnly}
         >
-          <SelectTrigger className="w-[50%]">
+          <SelectTrigger className="w-[50%]"  data-testid="category-selector">
             <SelectValue placeholder="Select a Category" />
           </SelectTrigger>
           <SelectContent>

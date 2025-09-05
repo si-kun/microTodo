@@ -27,6 +27,7 @@ const DateCard = ({ hasDeadline, control, setValue,disabled }: DateCardProps) =>
                 id="startDate"
                 value={field.value}
                 onChange={field.onChange}
+                aria-label="開始日"
               />
             )}
           />
@@ -39,6 +40,7 @@ const DateCard = ({ hasDeadline, control, setValue,disabled }: DateCardProps) =>
                 id="dueDate"
                 value={field.value}
                 onChange={field.onChange}
+                aria-label="終了日"
               />
             )}
           />
@@ -47,6 +49,8 @@ const DateCard = ({ hasDeadline, control, setValue,disabled }: DateCardProps) =>
       <div className="flex items-center gap-1">
         <Checkbox
           id="hasDeadline"
+          aria-label="日付未定"
+          data-testid="deadline-checkbox"
           checked={!hasDeadline}
           disabled={disabled}
           onCheckedChange={

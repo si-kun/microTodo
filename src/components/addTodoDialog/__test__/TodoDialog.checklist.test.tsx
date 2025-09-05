@@ -26,45 +26,6 @@ const mockedToast = jest.mocked(toast);
 
 describe("TodoDialog Component mode create", () => {
   const user = userEvent.setup();
-
-  const openDialog = async () => {
-    const openTrigger = await screen.findByRole("button", {
-      name: "Todoを作成する",
-    });
-
-    await user.click(openTrigger);
-  };
-  describe("TodoDialog", () => {
-    it("TodoDialogが正しく開かれる", async () => {
-      render(<TodoDialog mode={"create"} />);
-
-      openDialog();
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(
-            "新しいTodoを作成します。必要な情報を入力してください。"
-          )
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("TodoTitleField", () => {
-    it("タイトル入力欄が正しく表示される", async () => {
-      render(<TodoDialog mode={"create"} />);
-
-      openDialog();
-
-      await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText("Create New Todo")
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
-  // ChecklistDialogのテスト完了
   describe("ChecklistDialog", () => {
     // 共通のセットアップ関数
     const setupHelpers = {
@@ -99,6 +60,7 @@ describe("TodoDialog Component mode create", () => {
         input: screen.getByPlaceholderText("チェックリストのタイトル"),
         addButton: screen.getByTestId("addChecklist-button"),
         closeButton: screen.getByTestId("closeChecklistDialog-button"),
+        checklistCount: screen.getByTestId("checkCount"),
       }),
 
       // チェックリストアイテムを追加
@@ -139,7 +101,7 @@ describe("TodoDialog Component mode create", () => {
       expect(screen.getByText("fireEventテスト")).toBeInTheDocument();
     });
 
-    it("複数のチェックリストが追加できる", async () => {
+    it("複数のチェックリストが追加できる、チェックリストの数が3つ ", async () => {
       await setupHelpers.openChecklistDialog();
 
       await setupHelpers.addMultipleItems([
@@ -152,6 +114,7 @@ describe("TodoDialog Component mode create", () => {
         expect(screen.getByText("fireEventテスト1")).toBeInTheDocument();
         expect(screen.getByText("fireEventテスト2")).toBeInTheDocument();
         expect(screen.getByText("fireEventテスト3")).toBeInTheDocument();
+        expect(setupHelpers.getChecklistElements().checklistCount).toHaveTextContent("チェックリストの数 0 / 3");
       });
     });
 
@@ -176,10 +139,12 @@ describe("TodoDialog Component mode create", () => {
 
       await setupHelpers.addChecklistItem("fireEventテスト");
       const checklistItem = screen.getByTestId("checklist-1");
+      const checklistCount = setupHelpers.getChecklistElements().checklistCount;
 
       // 初期状態は未完了
       await waitFor(() => {
         expect(checklistItem).not.toBeChecked();
+        expect(checklistCount).toHaveTextContent("チェックリストの数 0 / 1");
       });
 
       // クリックして完了にする
@@ -187,7 +152,16 @@ describe("TodoDialog Component mode create", () => {
 
       await waitFor(() => {
         expect(checklistItem).toBeChecked();
+        expect(checklistCount).toHaveTextContent("チェックリストの数 1 / 1");
       });
+
+      // 未完了に切り替える
+      fireEvent.click(checklistItem);
+
+      await waitFor(() => {
+        expect(checklistItem).not.toBeChecked();
+        expect(checklistCount).toHaveTextContent("チェックリストの数 0 / 1");
+      })
     });
 
     it("checklistDialogを閉じることができる", async () => {
@@ -246,13 +220,5 @@ describe("TodoDialog Component mode create", () => {
       })
     })
   });
-
-  describe("DateCard", () => {});
-
-  describe("CategorySelector", () => {});
-
-  describe("PriorityField", () => {});
-
-  describe("TodoDialogFooter", () => {});
 });
 

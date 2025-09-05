@@ -60,8 +60,6 @@ const TodoList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todos, filter, searchTerm]);
 
-  console.log("displayTodos", displayTodos);
-
   const handleDelete = async (id: string) => {
     try {
       setDisplayTodos((prev) =>
